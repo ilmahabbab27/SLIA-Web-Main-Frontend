@@ -1,18 +1,27 @@
 import { useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const slides = [
-  { image: "/images/hero-1.jpg", label: "Annual Subscriptions" },
-  { image: "/images/hero-2.jpg", label: "Annual Subscriptions" },
-  { image: "/images/hero-3.jpg", label: "Annual Subscriptions" },
-  { image: "/images/hero-4.jpg", label: "Annual Subscriptions" },
+  { image: "/images/hero-1.jpg", label: "Annual Subscriptions", heading: "Shaping the Future of Architecture", sub: "Join the premier professional body for architects in Sri Lanka" },
+  { image: "/images/hero-2.jpg", label: "Annual Subscriptions", heading: "Excellence in Design", sub: "Celebrating innovation and creativity in architectural practice" },
+  { image: "/images/hero-3.jpg", label: "Annual Subscriptions", heading: "Building Communities", sub: "Architecture that transforms lives and inspires generations" },
+  { image: "/images/hero-4.jpg", label: "Annual Subscriptions", heading: "Heritage & Modernity", sub: "Bridging Sri Lanka's rich architectural heritage with contemporary vision" },
 ];
 
 const HeroCarousel = () => {
   const [current, setCurrent] = useState(0);
+  const [direction, setDirection] = useState(1);
 
-  const next = useCallback(() => setCurrent((c) => (c + 1) % slides.length), []);
-  const prev = () => setCurrent((c) => (c - 1 + slides.length) % slides.length);
+  const next = useCallback(() => {
+    setDirection(1);
+    setCurrent((c) => (c + 1) % slides.length);
+  }, []);
+
+  const prev = () => {
+    setDirection(-1);
+    setCurrent((c) => (c - 1 + slides.length) % slides.length);
+  };
 
   useEffect(() => {
     const timer = setInterval(next, 5000);
@@ -21,55 +30,86 @@ const HeroCarousel = () => {
 
   return (
     <section className="relative w-full h-[60vh] md:h-[80vh] overflow-hidden">
-      {slides.map((slide, i) => (
-        <div
-          key={i}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            i === current ? "opacity-100" : "opacity-0"
-          }`}
+      <AnimatePresence mode="wait" custom={direction}>
+        <motion.div
+          key={current}
+          custom={direction}
+          initial={{ opacity: 0, scale: 1.05 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8, ease: "easeInOut" }}
+          className="absolute inset-0"
         >
           <img
-            src={slide.image}
-            alt={`Sri Lankan architecture ${i + 1}`}
+            src={slides[current].image}
+            alt={`Sri Lankan architecture ${current + 1}`}
             className="w-full h-full object-cover"
           />
           <div className="hero-overlay absolute inset-0" />
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Animated text overlay */}
+      <div className="absolute inset-0 flex items-center justify-center z-10">
+        <div className="text-center px-4">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={current}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-4 drop-shadow-lg">
+                {slides[current].heading}
+              </h1>
+              <p className="text-primary-foreground/80 text-lg md:text-xl max-w-2xl mx-auto">
+                {slides[current].sub}
+              </p>
+            </motion.div>
+          </AnimatePresence>
         </div>
-      ))}
+      </div>
 
       {/* CTA Button */}
       <div className="absolute top-6 right-6 z-10">
-        <a
+        <motion.a
           href="#"
-          className="bg-background/90 backdrop-blur-sm text-foreground px-6 py-3 text-sm font-medium border border-border hover:bg-background transition-colors"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="bg-background/90 backdrop-blur-sm text-foreground px-6 py-3 text-sm font-medium border border-border hover:bg-background transition-colors inline-block"
         >
           Annual Subscriptions
-        </a>
+        </motion.a>
       </div>
 
       {/* Navigation Arrows */}
-      <button
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={prev}
         className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-background/30 backdrop-blur-sm flex items-center justify-center hover:bg-background/50 transition-colors"
       >
         <ChevronLeft className="w-6 h-6 text-primary-foreground" />
-      </button>
-      <button
+      </motion.button>
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={next}
         className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-background/30 backdrop-blur-sm flex items-center justify-center hover:bg-background/50 transition-colors"
       >
         <ChevronRight className="w-6 h-6 text-primary-foreground" />
-      </button>
+      </motion.button>
 
       {/* Dots */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
         {slides.map((_, i) => (
-          <button
+          <motion.button
             key={i}
-            onClick={() => setCurrent(i)}
-            className={`w-3 h-3 rounded-full transition-all ${
-              i === current ? "bg-primary w-8" : "bg-background/50"
-            }`}
+            onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
+            className={`h-3 rounded-full transition-all ${i === current ? "bg-primary" : "bg-background/50"}`}
+            animate={{ width: i === current ? 32 : 12 }}
+            transition={{ duration: 0.3 }}
           />
         ))}
       </div>
