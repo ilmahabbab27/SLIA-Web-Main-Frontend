@@ -1,29 +1,50 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { ChevronDown, Menu, X, Facebook, Instagram, Youtube, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
   {
     label: "Architect",
-    children: ["Annual Awards", "Architect Exhibition", "Design Competition"],
+    children: [
+      { name: "Annual Awards", path: "/annual-awards" },
+      { name: "Architect Exhibition", path: "/architect-exhibition" },
+      { name: "Design Competition", path: "/design-competition" },
+    ],
   },
   {
     label: "News & Events",
-    children: ["Latest News", "Upcoming Events", "Past Events"],
+    children: [
+      { name: "Latest News", path: "/latest-news" },
+      { name: "Upcoming Events", path: "/upcoming-events" },
+      { name: "Past Events", path: "/past-events" },
+    ],
   },
   {
     label: "Education",
-    children: ["Courses", "Examinations", "BAE Notices"],
+    children: [
+      { name: "Courses", path: "/courses" },
+      { name: "Examinations", path: "/examinations" },
+      { name: "BAE Notices", path: "/bae-notices" },
+    ],
   },
   {
     label: "Resources",
-    children: ["Publications", "Specifications", "Downloads"],
+    children: [
+      { name: "Publications", path: "/publications" },
+      { name: "Specifications", path: "/specifications" },
+      { name: "Downloads", path: "/downloads" },
+    ],
   },
   {
     label: "About Us",
-    children: ["History", "Council", "Objectives"],
+    children: [
+      { name: "History", path: "/history" },
+      { name: "Council", path: "/council" },
+      { name: "Objectives", path: "/objectives" },
+    ],
   },
-  { label: "Contact Us" },
+  { label: "Contact Us", path: "/contact" },
 ];
 
 const SiteHeader = () => {
@@ -34,7 +55,7 @@ const SiteHeader = () => {
     <header className="sticky top-0 z-50 bg-background shadow-sm">
       <div className="container flex items-center justify-between py-3">
         {/* Logo */}
-        <a href="/" className="flex items-center gap-3">
+        <Link to="/" className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center border border-border">
               <span className="font-heading text-sm font-bold text-foreground">SLIA</span>
@@ -48,7 +69,7 @@ const SiteHeader = () => {
               </span>
             </div>
           </div>
-        </a>
+        </Link>
 
         {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-1">
@@ -59,20 +80,29 @@ const SiteHeader = () => {
               onMouseEnter={() => setOpenDropdown(item.label)}
               onMouseLeave={() => setOpenDropdown(null)}
             >
-              <button className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors">
-                {item.label}
-                {item.children && <ChevronDown className="w-3.5 h-3.5" />}
-              </button>
+              {item.children ? (
+                <button className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors">
+                  {item.label}
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+              ) : (
+                <Link
+                  to={(item as any).path || "#"}
+                  className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
+                >
+                  {item.label}
+                </Link>
+              )}
               {item.children && openDropdown === item.label && (
                 <div className="absolute top-full left-0 bg-background border border-border shadow-lg rounded-sm min-w-[200px] py-1 z-50">
                   {item.children.map((child) => (
-                    <a
-                      key={child}
-                      href="#"
+                    <Link
+                      key={child.name}
+                      to={child.path}
                       className="block px-4 py-2 text-sm text-foreground hover:bg-muted hover:text-primary transition-colors"
                     >
-                      {child}
-                    </a>
+                      {child.name}
+                    </Link>
                   ))}
                 </div>
               )}
@@ -107,33 +137,44 @@ const SiteHeader = () => {
           <div className="container py-4 space-y-2">
             {navItems.map((item) => (
               <div key={item.label}>
-                <button
-                  className="flex items-center justify-between w-full py-2 text-sm font-medium text-foreground"
-                  onClick={() =>
-                    setOpenDropdown(openDropdown === item.label ? null : item.label)
-                  }
-                >
-                  {item.label}
-                  {item.children && (
-                    <ChevronDown
-                      className={`w-4 h-4 transition-transform ${
-                        openDropdown === item.label ? "rotate-180" : ""
-                      }`}
-                    />
-                  )}
-                </button>
-                {item.children && openDropdown === item.label && (
-                  <div className="pl-4 space-y-1">
-                    {item.children.map((child) => (
-                      <a
-                        key={child}
-                        href="#"
-                        className="block py-1.5 text-sm text-muted-foreground hover:text-primary"
-                      >
-                        {child}
-                      </a>
-                    ))}
-                  </div>
+                {item.children ? (
+                  <>
+                    <button
+                      className="flex items-center justify-between w-full py-2 text-sm font-medium text-foreground"
+                      onClick={() =>
+                        setOpenDropdown(openDropdown === item.label ? null : item.label)
+                      }
+                    >
+                      {item.label}
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform ${
+                          openDropdown === item.label ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                    {openDropdown === item.label && (
+                      <div className="pl-4 space-y-1">
+                        {item.children.map((child) => (
+                          <Link
+                            key={child.name}
+                            to={child.path}
+                            className="block py-1.5 text-sm text-muted-foreground hover:text-primary"
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            {child.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    to={(item as any).path || "#"}
+                    className="block py-2 text-sm font-medium text-foreground hover:text-primary"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
                 )}
               </div>
             ))}
