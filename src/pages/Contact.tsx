@@ -1,5 +1,5 @@
 import PageLayout from "@/components/PageLayout";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Contact = () => (
@@ -24,28 +24,53 @@ const Contact = () => (
           <div className="space-y-8">
             <div>
               <h2 className="font-heading text-2xl font-bold text-foreground mb-6">Contact Information</h2>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-foreground text-sm">Address</p>
-                    <p className="text-muted-foreground text-sm">120/7, Vidya Mawatha, Colombo 07, Sri Lanka</p>
+              <div className="space-y-6">
+
+                {/* Address Information */}
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Address Information</p>
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    <p className="text-foreground/80 text-sm leading-relaxed">
+                      Sri Lanka Institute of Architects,<br />
+                      120/7, Vidya Mw., Colombo 07
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <Phone className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-foreground text-sm">Phone</p>
-                    <p className="text-muted-foreground text-sm">072 71 64 900</p>
+
+                {/* Mail & Phone */}
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Mail &amp; Phone Number</p>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <Mail className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                      <div className="space-y-1">
+                        <a href="mailto:honysecretary@architects.lk" className="block text-foreground/80 text-sm hover:text-primary transition-colors">
+                          honysecretary@architects.lk
+                        </a>
+                        <a href="mailto:secretariat@architects.lk" className="block text-foreground/80 text-sm hover:text-primary transition-colors">
+                          secretariat@architects.lk
+                        </a>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Phone className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                      <p className="text-foreground/80 text-sm">Tel. 011 268 9900 Ext. 208</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <Mail className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-foreground text-sm">Email</p>
-                    <p className="text-muted-foreground text-sm">webmaster@architects.lk</p>
+
+                {/* Stay In Touch */}
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Stay In Touch</p>
+                  <div className="flex items-start gap-3">
+                    <Globe className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    <a href="https://www.slia.lk" target="_blank" rel="noopener noreferrer" className="text-foreground/80 text-sm hover:text-primary transition-colors">
+                      www.slia.lk
+                    </a>
                   </div>
                 </div>
+
               </div>
             </div>
 

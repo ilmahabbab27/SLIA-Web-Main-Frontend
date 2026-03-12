@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ScrollReveal from "./ScrollReveal";
 
-const newsItems = [
+const fallbackNewsItems = [
   { title: "Online Revit Course for Architects", subtitle: "Eng. Sampath Ekanayake", description: "The Sri Lanka Institute of Architects has scheduled the 9th intake of the online Certificate Course in Revit. Contact: Board of Management | Tel. 072 71 64 900", link: "#" },
   { title: "Trainer Practices Registration for 2024", subtitle: "Register Trainer Practices Annually", description: "SLIA Council ratified a BAE recommendation to register Trainer Practices annually. Members interested in registering their Practices as a Trainer Practice are requested to submit applications.", link: "#" },
   { title: "Call for Entries for Annual Awards 2023/24", subtitle: "Awards Categories", description: "Design Award | Colour Award | Young Architect of the Year Award | Research Award | Publication Award | Architectural Conservation Award | Green and Sustainable Architecture Award", link: "#" },
@@ -17,9 +17,43 @@ const newsItems = [
 const NewsSection = () => {
   const [current, setCurrent] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedNews, setSelectedNews] = useState(newsItems[0]);
+  const [newsItems, setNewsItems] = useState(fallbackNewsItems);
+  const [selectedNews, setSelectedNews] = useState(fallbackNewsItems[0]);
 
-  const openModal = (item: typeof newsItems[0]) => {
+  useEffect(() => {
+    const raw = localStorage.getItem("site_news_v1");
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw) as Array<{
+        title?: string;
+        date?: string;
+        subtitle?: string;
+        description?: string;
+        link?: string;
+      }>;
+      if (!Array.isArray(parsed) || parsed.length === 0) return;
+      const next = parsed
+        .filter((n) => n?.title && n?.description)
+        .map((n) => ({
+          title: String(n.title),
+          subtitle: String(n.subtitle ?? n.date ?? ""),
+          description: String(n.description),
+          imageDataUrl: n.imageDataUrl ? String(n.imageDataUrl) : "",
+          link: String(n.link ?? "#"),
+        }));
+      if (next.length > 0) {
+        setNewsItems(next);
+        setSelectedNews(next[0]);
+        setCurrent(0);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const totalPages = useMemo(() => Math.ceil(newsItems.length / 3) || 1, [newsItems.length]);
+
+  const openModal = (item: (typeof fallbackNewsItems)[0]) => {
     setSelectedNews(item);
     setModalOpen(true);
   };
@@ -56,6 +90,16 @@ const NewsSection = () => {
                   className="bg-background border border-border p-6 rounded-sm cursor-pointer group"
                   onClick={() => openModal(item)}
                 >
+                  {item.imageDataUrl ? (
+                    <div className="mb-4 overflow-hidden rounded-sm border border-border">
+                      <img
+                        src={item.imageDataUrl}
+                        alt={item.title}
+                        className="h-36 w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    </div>
+                  ) : null}
                   <h3 className="font-heading text-lg font-bold text-foreground mb-1 group-hover:text-primary transition-colors">
                     {item.title}
                   </h3>
@@ -82,7 +126,7 @@ const NewsSection = () => {
               <ChevronLeft className="w-5 h-5" />
             </motion.button>
             <span className="text-sm text-muted-foreground">
-              {Math.floor(current / 3) + 1} / {Math.ceil(newsItems.length / 3)}
+              {Math.floor(current / 3) + 1} / {totalPages}
             </span>
             <motion.button
               whileHover={{ scale: 1.1 }}
@@ -123,6 +167,16 @@ const NewsSection = () => {
                 <h3 className="font-heading text-2xl font-bold text-foreground mb-2">
                   {selectedNews.title}
                 </h3>
+                {selectedNews.imageDataUrl ? (
+                  <div className="mb-4 overflow-hidden rounded-sm border border-border">
+                    <img
+                      src={selectedNews.imageDataUrl}
+                      alt={selectedNews.title}
+                      className="h-56 w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : null}
                 <p className="text-primary font-medium mb-4">{selectedNews.subtitle}</p>
                 <p className="text-muted-foreground text-sm leading-relaxed mb-6">
                   {selectedNews.description}

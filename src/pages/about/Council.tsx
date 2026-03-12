@@ -12,7 +12,7 @@ const councilMembers = [
 ];
 
 const Council = () => (
-  <PageLayout title="Council" subtitle="SLIA Council Members for Session 2024/2025" breadcrumb="About Us / Council">
+  <PageLayout title="The Council" subtitle="The Council" breadcrumb="About Us / The Council">
     <section className="py-16">
       <div className="container">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">

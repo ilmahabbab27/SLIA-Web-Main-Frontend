@@ -8,14 +8,14 @@ const footerLinks = [
   { name: "News & Events", path: "/latest-news" },
   { name: "Education", path: "/courses" },
   { name: "Resources", path: "/publications" },
-  { name: "About Us", path: "/history" },
+  { name: "About Us", path: "/about" },
 ];
 
 const resourceLinks = [
   { name: "Annual Awards", path: "/annual-awards" },
   { name: "Publications", path: "/publications" },
   { name: "Examinations", path: "/examinations" },
-  { name: "Downloads", path: "/downloads" },
+  { name: "Downloads", path: "/bae" },
   { name: "Contact Us", path: "/contact" },
 ];
 
@@ -28,17 +28,23 @@ const SiteFooter = () => {
           <ScrollReveal variant="fadeUp" className="md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <motion.div
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.6 }}
-                className="w-10 h-10 rounded-full bg-primary flex items-center justify-center"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.3 }}
+                className="flex items-center justify-center p-1 bg-white/90 rounded-sm"
               >
-                <span className="font-heading text-xs font-bold text-primary-foreground">SLIA</span>
+                <img src="/images/logo.png" alt="SLIA Logo" className="h-10 w-auto object-contain" />
               </motion.div>
-              <span className="font-heading text-lg font-bold text-section-dark-foreground">SLIA</span>
             </div>
             <p className="text-section-dark-foreground/60 text-sm leading-relaxed">
               Sri Lanka Institute of Architects — one of the foremost professional organisations in
               Sri Lanka and the Asian region.
+            </p>
+            <p className="mt-4 text-section-dark-foreground/60 text-sm leading-relaxed">
+              Sri Lanka Institute of Architects
+              <br />
+              Incorporated by Law No. 1 of 1976
+              <br />
+              www.slia.lk
             </p>
             <div className="flex gap-3 mt-4">
               {[Facebook, Instagram, Youtube, Linkedin].map((Icon, i) => (

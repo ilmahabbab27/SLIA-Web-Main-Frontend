@@ -29,7 +29,7 @@ const EventsCarousel = () => {
       <div className="container">
         <ScrollReveal>
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground text-center mb-2">
-            Sri Lanka Institute of Architects
+            Key Highlights
           </h2>
           <div className="w-20 h-1 bg-primary mx-auto mb-10" />
         </ScrollReveal>

@@ -1,5 +1,27 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import ScrollReveal from "./ScrollReveal";
+
+const eventCards = [
+  {
+    title: "Upcoming Events",
+    subtitle: "See what’s next on the SLIA calendar",
+    path: "/upcoming-events",
+    image: "/images/event-1.jpg",
+  },
+  {
+    title: "SLIA Annual Sessions",
+    subtitle: "Introduction, program items, and official website link",
+    path: "/slia-annual-sessions",
+    image: "/images/event-2.jpg",
+  },
+  {
+    title: "Past Events",
+    subtitle: "Browse previous events and highlights",
+    path: "/past-events",
+    image: "/images/event-3.jpg",
+  },
+];
 
 const VideoSection = () => {
   return (
@@ -7,58 +29,40 @@ const VideoSection = () => {
       <div className="container">
         <ScrollReveal>
           <h2 className="font-heading text-2xl md:text-3xl font-bold text-foreground mb-2 text-center">
-            Members' Work & Trade Exhibition
+            SLIA Events
           </h2>
-          <p className="text-muted-foreground text-center mb-8">Sri Lanka Institute of Architects</p>
+          <p className="text-muted-foreground text-center mb-8">Explore events and key annual programs</p>
         </ScrollReveal>
 
-        <ScrollReveal variant="scaleIn" delay={0.2}>
-          <div className="max-w-4xl mx-auto">
-            <motion.div
-              className="relative w-full aspect-video rounded-sm overflow-hidden shadow-lg"
-              whileHover={{ scale: 1.01 }}
-              transition={{ type: "spring", stiffness: 200 }}
-            >
-              <iframe
-                src="https://www.youtube.com/embed/6eM6V7Bxxo8"
-                title="ARCHITECT 2024"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="absolute inset-0 w-full h-full"
-              />
-            </motion.div>
+        <ScrollReveal variant="fadeUp" delay={0.2}>
+          <div className="grid gap-6 md:grid-cols-3">
+            {eventCards.map((c) => (
+              <motion.div
+                key={c.title}
+                whileHover={{ y: -4 }}
+                transition={{ type: "spring", stiffness: 220, damping: 18 }}
+                className="rounded-3xl border border-border bg-card shadow-sm overflow-hidden"
+              >
+                <div className="w-full aspect-[16/10] bg-muted overflow-hidden">
+                  <img src={c.image} alt={c.title} className="h-full w-full object-cover" loading="lazy" />
+                </div>
+                <div className="p-6">
+                  <h3 className="font-heading text-xl font-semibold text-foreground">{c.title}</h3>
+                  <p className="mt-2 text-sm text-foreground/70">
+                    {c.subtitle.replaceAll("â€™", "’").replaceAll("â€˜", "‘")}
+                  </p>
+                  <div className="mt-5">
+                    <Link
+                      to={c.path}
+                      className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                    >
+                      View
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </div>
-        </ScrollReveal>
-
-        <ScrollReveal variant="fadeUp" delay={0.3}>
-          <motion.div
-            className="mt-12 section-dark rounded-sm p-8 md:p-12 text-center max-w-4xl mx-auto relative overflow-hidden"
-            whileHover={{ boxShadow: "0 20px 60px -15px hsla(22, 100%, 45%, 0.2)" }}
-          >
-            {/* Animated background accent */}
-            <motion.div
-              className="absolute top-0 left-0 w-full h-1 bg-primary"
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              style={{ transformOrigin: "left" }}
-            />
-            <h3 className="font-heading text-2xl md:text-3xl font-bold mb-4">
-              Walk through the Architects' Work & Trade Exhibition
-            </h3>
-            <p className="text-section-dark-foreground/70 mb-6">
-              23rd to 25th February, 2023 at BMICH from 10.00 am - 10.00 pm
-            </p>
-            <motion.a
-              href="#"
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              className="inline-block bg-primary text-primary-foreground px-8 py-3 font-semibold text-sm uppercase tracking-wider hover:bg-primary/90 transition-colors"
-            >
-              Reserve Your Trade Stall
-            </motion.a>
-          </motion.div>
         </ScrollReveal>
       </div>
     </section>

@@ -6,47 +6,54 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
   {
-    label: "Architect",
-    children: [
-      { name: "Annual Awards", path: "/annual-awards" },
-      { name: "Architect Exhibition", path: "/architect-exhibition" },
-      { name: "Design Competition", path: "/design-competition" },
-    ],
-  },
-  {
-    label: "News & Events",
-    children: [
-      { name: "Latest News", path: "/latest-news" },
-      { name: "Upcoming Events", path: "/upcoming-events" },
-      { name: "Past Events", path: "/past-events" },
-    ],
-  },
-  {
-    label: "Education",
-    children: [
-      { name: "Courses", path: "/courses" },
-      { name: "Examinations", path: "/examinations" },
-      { name: "BAE Notices", path: "/bae-notices" },
-    ],
-  },
-  {
-    label: "Resources",
-    children: [
-      { name: "Publications", path: "/publications" },
-      { name: "Specifications", path: "/specifications" },
-      { name: "Downloads", path: "/downloads" },
-    ],
-  },
-  {
     label: "About Us",
     children: [
-      { name: "History", path: "/history" },
-      { name: "Council", path: "/council" },
-      { name: "Objectives", path: "/objectives" },
+      { name: "about the Institute", path: "/about" },
+      { name: "The Council", path: "/council" },
+      { name: "Board of Trustees", path: "/about-trustees" },
+      { name: "Board of Management", path: "/about-management" },
+      { name: "Board of Architectural Education", path: "/about-bae" },
+      { name: "Professional Affairs Board", path: "/about-pab" },
+      { name: "Board of Architectural Publications", path: "/about-bap" },
     ],
   },
+  {
+    label: "Boards",
+    children: [
+      { name: "All Boards", path: "/boards" },
+      { name: "Board of Architectural Education", path: "/bae" },
+      { name: "Board of Architectural Publications", path: "/bap" },
+      { name: "Board of Management", path: "/management" },
+      { name: "Professional Affairs Board", path: "/pab" },
+    ],
+  },
+  {
+    label: "Architect",
+    children: [
+      { name: "Find an Architect", path: "/find-an-architect" },
+      { name: "Architect Practices", path: "/architect-practices" },
+      { name: "Why be an Architect", path: "/why-be-an-architect" },
+    ],
+  },
+  {
+    label: "News",
+    children: [
+      { name: "Latest News", path: "/latest-news" },
+    ],
+  },
+  {
+    label: "Events",
+    children: [
+      { name: "Upcoming Events", path: "/upcoming-events" },
+      { name: "Past Events", path: "/past-events" },
+      { name: "SLIA Annual Sessions", path: "/slia-annual-sessions" },
+    ],
+  },
+  { label: "SLIA Awards", path: "/slia-awards" },
   { label: "Contact Us", path: "/contact" },
 ];
+
+const isExternalUrl = (path: string) => /^https?:\/\//i.test(path);
 
 const SiteHeader = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -76,15 +83,11 @@ const SiteHeader = () => {
         <Link to="/" className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <motion.div
-              whileHover={{ rotate: 10 }}
-              className="w-12 h-12 rounded-full bg-muted flex items-center justify-center border border-border"
+              whileHover={{ scale: 1.05 }}
+              className="flex items-center justify-center"
             >
-              <span className="font-heading text-sm font-bold text-foreground">SLIA</span>
+              <img src="/images/logo.png" alt="SLIA Logo" className="h-14 w-auto object-contain" />
             </motion.div>
-            <div className="hidden sm:block">
-              <span className="font-heading text-lg font-bold leading-tight text-foreground block">Sri Lanka</span>
-              <span className="font-heading text-sm leading-tight text-muted-foreground block">Institute of Architects</span>
-            </div>
           </div>
         </Link>
 
@@ -128,12 +131,23 @@ const SiteHeader = () => {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: ci * 0.05 }}
                       >
-                        <Link
-                          to={child.path}
-                          className="block px-4 py-2 text-sm text-foreground hover:bg-muted hover:text-primary hover:pl-5 transition-all"
-                        >
-                          {child.name}
-                        </Link>
+                        {isExternalUrl(child.path) ? (
+                          <a
+                            href={child.path}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block px-4 py-2 text-sm text-foreground hover:bg-muted hover:text-primary hover:pl-5 transition-all"
+                          >
+                            {child.name}
+                          </a>
+                        ) : (
+                          <Link
+                            to={child.path}
+                            className="block px-4 py-2 text-sm text-foreground hover:bg-muted hover:text-primary hover:pl-5 transition-all"
+                          >
+                            {child.name}
+                          </Link>
+                        )}
                       </motion.div>
                     ))}
                   </motion.div>
@@ -218,16 +232,29 @@ const SiteHeader = () => {
                             exit={{ height: 0, opacity: 0 }}
                             className="pl-4 space-y-1 overflow-hidden"
                           >
-                            {item.children.map((child) => (
-                              <Link
-                                key={child.name}
-                                to={child.path}
-                                className="block py-1.5 text-sm text-muted-foreground hover:text-primary"
-                                onClick={() => setMobileOpen(false)}
-                              >
-                                {child.name}
-                              </Link>
-                            ))}
+                            {item.children.map((child) =>
+                              isExternalUrl(child.path) ? (
+                                <a
+                                  key={child.name}
+                                  href={child.path}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="block py-1.5 text-sm text-muted-foreground hover:text-primary"
+                                  onClick={() => setMobileOpen(false)}
+                                >
+                                  {child.name}
+                                </a>
+                              ) : (
+                                <Link
+                                  key={child.name}
+                                  to={child.path}
+                                  className="block py-1.5 text-sm text-muted-foreground hover:text-primary"
+                                  onClick={() => setMobileOpen(false)}
+                                >
+                                  {child.name}
+                                </Link>
+                              )
+                            )}
                           </motion.div>
                         )}
                       </AnimatePresence>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+
 import { motion, AnimatePresence } from "framer-motion";
 
 const slides = [
@@ -18,26 +18,22 @@ const HeroCarousel = () => {
     setCurrent((c) => (c + 1) % slides.length);
   }, []);
 
-  const prev = () => {
-    setDirection(-1);
-    setCurrent((c) => (c - 1 + slides.length) % slides.length);
-  };
 
   useEffect(() => {
-    const timer = setInterval(next, 5000);
+    const timer = setInterval(next, 7000); // Increased duration to 7 seconds
     return () => clearInterval(timer);
   }, [next]);
 
   return (
-    <section className="relative w-full h-[60vh] md:h-[80vh] overflow-hidden">
-      <AnimatePresence mode="wait" custom={direction}>
+    <section className="relative w-full h-screen overflow-hidden bg-black">
+      <AnimatePresence custom={direction}>
         <motion.div
           key={current}
           custom={direction}
           initial={{ opacity: 0, scale: 1.05 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.8, ease: "easeInOut" }}
+          transition={{ duration: 1.2, ease: "easeInOut" }}
           className="absolute inset-0"
         >
           <img
@@ -63,7 +59,7 @@ const HeroCarousel = () => {
               <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-4 drop-shadow-lg">
                 {slides[current].heading}
               </h1>
-              <p className="text-primary-foreground/80 text-lg md:text-xl max-w-2xl mx-auto">
+              <p className="text-primary-foreground/80 text-lg md:text-xl font-bold max-w-2xl mx-auto">
                 {slides[current].sub}
               </p>
             </motion.div>
@@ -83,31 +79,15 @@ const HeroCarousel = () => {
         </motion.a>
       </div>
 
-      {/* Navigation Arrows */}
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={prev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-background/30 backdrop-blur-sm flex items-center justify-center hover:bg-background/50 transition-colors"
-      >
-        <ChevronLeft className="w-6 h-6 text-primary-foreground" />
-      </motion.button>
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={next}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-background/30 backdrop-blur-sm flex items-center justify-center hover:bg-background/50 transition-colors"
-      >
-        <ChevronRight className="w-6 h-6 text-primary-foreground" />
-      </motion.button>
+
 
       {/* Dots */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-50">
         {slides.map((_, i) => (
           <motion.button
             key={i}
             onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
-            className={`h-3 rounded-full transition-all ${i === current ? "bg-primary" : "bg-background/50"}`}
+            className={`h-3 rounded-full shadow-md transition-all ${i === current ? "bg-white" : "bg-white/40 hover:bg-white/60"}`}
             animate={{ width: i === current ? 32 : 12 }}
             transition={{ duration: 0.3 }}
           />

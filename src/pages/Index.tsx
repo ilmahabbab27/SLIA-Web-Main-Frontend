@@ -2,9 +2,13 @@ import SiteHeader from "@/components/SiteHeader";
 import HeroCarousel from "@/components/HeroCarousel";
 import EventsCarousel from "@/components/EventsCarousel";
 import AboutSection from "@/components/AboutSection";
+import BoardsSection from "@/components/BoardsSection";
+import WhyArchitectSection from "@/components/WhyArchitectSection";
 import VideoSection from "@/components/VideoSection";
+import KeyHighlightsSection from "@/components/KeyHighlightsSection";
 import NewsSection from "@/components/NewsSection";
 import BecomeArchitect from "@/components/BecomeArchitect";
+import FAQSection from "@/components/FAQSection";
 import SiteFooter from "@/components/SiteFooter";
 
 const Index = () => {
@@ -15,9 +19,13 @@ const Index = () => {
         <HeroCarousel />
         <EventsCarousel />
         <AboutSection />
+        <WhyArchitectSection />
+        <BoardsSection />
         <VideoSection />
+        <KeyHighlightsSection />
         <NewsSection />
         <BecomeArchitect />
+        <FAQSection />
       </main>
       <SiteFooter />
     </div>
