@@ -55,6 +55,7 @@ const ScrollReveal = ({
     <motion.div
       ref={ref}
       className={className}
+      style={{ position: "relative" }}
       initial="hidden"
       animate={controls}
       variants={variants[variant]}

@@ -1,487 +1,393 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { ArrowUpRight, BookOpenCheck, CalendarDays, FileText, GraduationCap, Loader2, Search, Users } from "lucide-react";
 import PageLayout from "@/components/PageLayout";
-import {
-  FileText,
-  Download,
-  Calendar,
-  Lock,
-  Settings,
-} from "lucide-react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { baeAdminStorage } from "@/pages/baeAdmin/storage";
-import type { MemberRecord, BaeDocument } from "@/pages/baeAdmin/types";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { baeDocumentApi, baeSettingApi, boardApi, type BaeDocumentCategory, type BaeDocumentItem } from "@/lib/api";
 
-type DocLink = {
-  title: string;
-  meta: string;
-  href: string;
-  downloadName: string;
-  uploadedAt: string; // YYYY-MM-DD
+const defaultBaeIntroduction =
+  "The Board of Architectural Education supports the Institute's education and examination related work, including application processes, notices, reference material, and member resources.";
+
+const documentCategories: Array<{ value: BaeDocumentCategory; label: string }> = [
+  {
+    value: "applications",
+    label: "Applications",
+  },
+  {
+    value: "notices",
+    label: "Notices",
+  },
+  {
+    value: "references",
+    label: "References",
+  },
+];
+
+const isDocumentCategory = (value: string | null): value is BaeDocumentCategory =>
+  documentCategories.some((category) => category.value === value);
+
+type CategoryFilter = "all" | BaeDocumentCategory;
+type SortKey = "newest" | "oldest" | "title_asc" | "title_desc";
+
+const formatDate = (date?: string) => {
+  const value = date || new Date().toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat("en-US", { year: "numeric", month: "short", day: "2-digit" }).format(
+    new Date(`${value}T00:00:00`)
+  );
 };
 
-const applications: DocLink[] = [
-  {
-    title: "Application form (Placeholder)",
-    meta: "PDF",
-    href: "/brochure.pdf",
-    downloadName: "BAE-Application-Form.pdf",
-    uploadedAt: "2026-03-05",
-  },
-  {
-    title: "Training record (Placeholder)",
-    meta: "PDF",
-    href: "/brochure.pdf",
-    downloadName: "BAE-Training-Record.pdf",
-    uploadedAt: "2026-03-05",
-  },
-  {
-    title: "Candidate checklist (Placeholder)",
-    meta: "PDF",
-    href: "/brochure.pdf",
-    downloadName: "BAE-Candidate-Checklist.pdf",
-    uploadedAt: "2026-03-05",
-  },
-];
+const documentDate = (item: BaeDocumentItem) =>
+  item.uploaded_at || item.created_at?.slice(0, 10) || new Date().toISOString().slice(0, 10);
 
-const notices: DocLink[] = [
-  {
-    title: "Notice 01 (Placeholder)",
-    meta: "PDF",
-    href: "/brochure.pdf",
-    downloadName: "BAE-Notice-01.pdf",
-    uploadedAt: "2026-03-05",
-  },
-  {
-    title: "Notice 02 (Placeholder)",
-    meta: "PDF",
-    href: "/brochure.pdf",
-    downloadName: "BAE-Notice-02.pdf",
-    uploadedAt: "2026-02-10",
-  },
-  {
-    title: "Notice 03 (Placeholder)",
-    meta: "PDF",
-    href: "/brochure.pdf",
-    downloadName: "BAE-Notice-03.pdf",
-    uploadedAt: "2026-01-18",
-  },
-];
+const documentYear = (item: BaeDocumentItem) => documentDate(item).slice(0, 4);
 
-const references: DocLink[] = [
-  {
-    title: "BAE Reference pack (Placeholder)",
-    meta: "PDF",
-    href: "/brochure.pdf",
-    downloadName: "BAE-Reference-Pack.pdf",
-    uploadedAt: "2026-02-20",
-  },
-  {
-    title: "Specifications (Placeholder)",
-    meta: "PDF",
-    href: "/brochure.pdf",
-    downloadName: "BAE-Specifications.pdf",
-    uploadedAt: "2026-02-20",
-  },
-  {
-    title: "Reading list (Placeholder)",
-    meta: "PDF",
-    href: "/brochure.pdf",
-    downloadName: "BAE-Reading-List.pdf",
-    uploadedAt: "2026-02-20",
-  },
-];
+const categoryLabel = (value: BaeDocumentCategory) =>
+  documentCategories.find((category) => category.value === value)?.label || value;
 
-const formatUploadedDate = (isoDate: string) =>
-  new Intl.DateTimeFormat("en-US", { year: "numeric", month: "short", day: "2-digit" }).format(
-    new Date(`${isoDate}T00:00:00`)
-  );
+const documentHref = (item: BaeDocumentItem) => item.file_src || item.external_url || "";
 
-const DocumentCard = ({ item }: { item: DocLink | BaeDocument }) => (
-  <div className="rounded-2xl border border-border/70 bg-background/60 p-5 hover:bg-background/80 hover:shadow-sm transition">
-    <div className="flex items-start justify-between gap-3">
-      <div className="min-w-0">
-        <p className="font-heading font-semibold text-foreground">{item.title}</p>
-        <p className="mt-2 text-sm text-foreground/70">
-          Uploaded: <span className="font-medium text-foreground/80">{formatUploadedDate(item.uploadedAt)}</span>
-        </p>
+const DocumentCard = ({ item }: { item: BaeDocumentItem }) => {
+  const href = documentHref(item);
+
+  return (
+    <article className="group rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-primary/45 hover:shadow-md sm:p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <FileText className="h-6 w-6" />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary">
+              {item.meta || categoryLabel(item.category)}
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-xs text-foreground/55">
+              <CalendarDays className="h-3.5 w-3.5" />
+              {formatDate(documentDate(item))}
+            </span>
+          </div>
+
+          <h3 className="font-heading text-lg font-bold leading-snug text-foreground group-hover:text-primary">
+            {item.title}
+          </h3>
+
+          {(item.file_name || item.external_url) && (
+            <p className="mt-2 truncate text-sm text-foreground/55">{item.file_name || item.external_url}</p>
+          )}
+
+          {href ? (
+            <a
+              href={href}
+              target={href.startsWith("http") ? "_blank" : undefined}
+              rel={href.startsWith("http") ? "noreferrer" : undefined}
+              download={item.file_src ? item.file_name || item.title : undefined}
+              className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+            >
+              Open document
+              <ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </a>
+          ) : (
+            <p className="mt-5 text-sm font-medium text-foreground/45">Document link not available</p>
+          )}
+        </div>
       </div>
-      <span className="shrink-0 text-xs rounded-full border border-border bg-muted/40 px-2 py-1 text-foreground/70">
-        {item.meta}
-      </span>
-    </div>
-    <div className="mt-4">
-      <a
-        href={item.href}
-        download={item.downloadName}
-        className="inline-flex px-5 py-2.5 bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition rounded-xl shadow-sm"
-      >
-        Download
-      </a>
-    </div>
+    </article>
+  );
+};
+
+const EmptyState = () => (
+  <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
+    <FileText className="mx-auto mb-4 h-10 w-10 text-foreground/30" />
+    <p className="font-medium text-foreground">No documents found.</p>
+    <p className="mt-2 text-sm text-foreground/60">Try a different section, year, or search term.</p>
   </div>
 );
 
-const graduateMembersFallback = [
-  {
-    name: "Ar. [Name]",
-    role: "Chairperson",
-    email: "chairperson@example.com",
-    address: "SLIA, Colombo, Sri Lanka",
-    imageSrc: "/placeholder.svg",
-  },
-  {
-    name: "Ar. [Name]",
-    role: "Member",
-    email: "member1@example.com",
-    address: "Colombo, Sri Lanka",
-    imageSrc: "/placeholder.svg",
-  },
-  {
-    name: "Ar. [Name]",
-    role: "Member",
-    email: "member2@example.com",
-    address: "Kandy, Sri Lanka",
-    imageSrc: "/placeholder.svg",
-  },
-  {
-    name: "Ar. [Name]",
-    role: "Member",
-    email: "member3@example.com",
-    address: "Galle, Sri Lanka",
-    imageSrc: "/placeholder.svg",
-  },
-];
-
-const studentMembersFallback = [
-  {
-    name: "Student [Name]",
-    role: "Representative",
-    email: "student1@example.com",
-    address: "University (Placeholder)",
-    imageSrc: "/placeholder.svg",
-  },
-  {
-    name: "Student [Name]",
-    role: "Representative",
-    email: "student2@example.com",
-    address: "University (Placeholder)",
-    imageSrc: "/placeholder.svg",
-  },
-  {
-    name: "Student [Name]",
-    role: "Representative",
-    email: "student3@example.com",
-    address: "University (Placeholder)",
-    imageSrc: "/placeholder.svg",
-  },
-];
-
-const toPublicMember = (m: MemberRecord) => ({
-  name: m.name,
-  role: m.role,
-  email: m.email,
-  address: m.address,
-  imageSrc: m.imageSrc,
-});
-
-const MemberTable = ({
-  title,
-  accentClass,
-  members,
-}: {
-  title: string;
-  accentClass: string;
-  members: { name: string; role: string; email: string; address: string; imageSrc?: string }[];
-}) => {
+const DocumentLibrary = ({ documents }: { documents: BaeDocumentItem[] }) => {
+  const location = useLocation();
+  const section = new URLSearchParams(location.search).get("section");
+  const initialCategory = isDocumentCategory(section) ? section : "all";
+  const [category, setCategory] = useState<CategoryFilter>(initialCategory);
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<{
-    name: string;
-    role: string;
-    email: string;
-    address: string;
-    imageSrc?: string;
-  } | null>(null);
+  const [year, setYear] = useState("all");
+  const [sort, setSort] = useState<SortKey>("newest");
+
+  useEffect(() => {
+    const selected = new URLSearchParams(location.search).get("section");
+    setCategory(isDocumentCategory(selected) ? selected : "all");
+  }, [location.search]);
+
+  const years = useMemo(() => {
+    const values = Array.from(new Set(documents.map(documentYear)));
+    return values.sort((a, b) => Number(b) - Number(a));
+  }, [documents]);
+
+  const categoryCounts = useMemo(
+    () =>
+      documentCategories.reduce(
+        (counts, item) => ({
+          ...counts,
+          [item.value]: documents.filter((document) => document.category === item.value).length,
+        }),
+        {} as Record<BaeDocumentCategory, number>
+      ),
+    [documents]
+  );
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return members;
-    return members.filter((m) => {
-      const hay = `${m.name} ${m.role} ${m.email} ${m.address}`.toLowerCase();
-      return hay.includes(q);
+    const normalizedQuery = query.trim().toLowerCase();
+
+    const items = documents
+      .filter((item) => category === "all" || item.category === category)
+      .filter((item) => year === "all" || documentYear(item) === year)
+      .filter((item) => {
+        if (!normalizedQuery) return true;
+        return `${item.title} ${item.meta || ""} ${item.file_name || ""} ${categoryLabel(item.category)}`
+          .toLowerCase()
+          .includes(normalizedQuery);
+      });
+
+    items.sort((a, b) => {
+      const dateA = documentDate(a);
+      const dateB = documentDate(b);
+      if (sort === "newest") return dateB.localeCompare(dateA);
+      if (sort === "oldest") return dateA.localeCompare(dateB);
+      if (sort === "title_asc") return a.title.localeCompare(b.title);
+      return b.title.localeCompare(a.title);
     });
-  }, [members, query]);
+
+    return items;
+  }, [category, documents, query, sort, year]);
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h3 className="text-2xl font-semibold text-foreground">{title}</h3>
-          <div className={`w-14 h-1 rounded-full bg-gradient-to-r ${accentClass} mt-3`} />
-        </div>
-        <div className="w-full md:w-[320px]">
-          <label className="text-sm text-foreground/70" htmlFor={`${title}-search`}>
-            Search
-          </label>
-          <Input
-            id={`${title}-search`}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name or role..."
-            className="mt-2"
-          />
-        </div>
+    <div className="space-y-8 lg:flex lg:items-start lg:gap-8 lg:space-y-0">
+      <div className="lg:hidden">
+        <Label className="text-sm text-foreground/70">Document Section</Label>
+        <Select value={category} onValueChange={(value) => setCategory(value as CategoryFilter)}>
+          <SelectTrigger className="mt-2">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Documents ({documents.length})</SelectItem>
+            {documentCategories.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label} ({categoryCounts[item.value] || 0})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-border/70 bg-background/60">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[72px]">Photo</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Address</TableHead>
-              <TableHead className="w-[170px]">Role</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-foreground/70">
-                  No members match “{query.trim()}”.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filtered.map((m) => (
-                <TableRow
-                  key={`${m.role}-${m.email}-${m.name}`}
-                  className="cursor-pointer"
-                  onClick={() => setSelected(m)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setSelected(m);
-                    }
-                  }}
-                  tabIndex={0}
-                  role="button"
-                  aria-label={`View details for ${m.name}`}
-                >
-                  <TableCell>
-                    <div className="h-10 w-10 rounded-full overflow-hidden border border-border bg-muted">
-                      <img
-                        src={m.imageSrc || "/placeholder.svg"}
-                        alt={m.name}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium text-foreground">{m.name}</TableCell>
-                  <TableCell className="text-foreground/80">{m.email}</TableCell>
-                  <TableCell className="text-foreground/80">{m.address}</TableCell>
-                  <TableCell className="text-foreground/80">{m.role}</TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <aside className="hidden lg:sticky lg:top-28 lg:block lg:w-[280px] lg:shrink-0 lg:self-start">
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+          <button
+            type="button"
+            onClick={() => setCategory("all")}
+            className={`mb-2 flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${
+              category === "all" ? "bg-primary text-primary-foreground" : "text-foreground/75 hover:bg-muted"
+            }`}
+          >
+            <span className="min-w-0 truncate">All Documents</span>
+            <span className="shrink-0">{documents.length}</span>
+          </button>
+          {documentCategories.map((item) => (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => setCategory(item.value)}
+              className={`flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${
+                category === item.value ? "bg-primary text-primary-foreground" : "text-foreground/75 hover:bg-muted"
+              }`}
+            >
+              <span className="min-w-0 truncate">{item.label}</span>
+              <span className="shrink-0">{categoryCounts[item.value] || 0}</span>
+            </button>
+          ))}
+        </div>
+      </aside>
 
-      <Dialog
-        open={!!selected}
-        onOpenChange={(open) => {
-          if (!open) setSelected(null);
-        }}
-      >
-        <DialogContent className="sm:max-w-[640px]">
-          {selected ? (
-            <>
-              <DialogHeader>
-                <DialogTitle>{selected.name}</DialogTitle>
-              </DialogHeader>
-
-              <div className="grid sm:grid-cols-[120px_1fr] gap-6 items-start">
-                <div className="h-28 w-28 rounded-2xl overflow-hidden border border-border bg-muted">
-                  <img
-                    src={selected.imageSrc || "/placeholder.svg"}
-                    alt={selected.name}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-foreground/60">Role</p>
-                    <p className="text-foreground font-medium">{selected.role}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-foreground/60">Email</p>
-                    <a
-                      className="text-foreground underline decoration-muted-foreground/40 hover:decoration-muted-foreground"
-                      href={`mailto:${selected.email}`}
-                    >
-                      {selected.email}
-                    </a>
-                  </div>
-                  <div>
-                    <p className="text-sm text-foreground/60">Address</p>
-                    <p className="text-foreground/80 leading-relaxed">{selected.address}</p>
-                  </div>
-                </div>
+      <div className="min-w-0 flex-1 space-y-6">
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end">
+            <div className="min-w-0 flex-1">
+              <Label htmlFor="bae-search" className="text-sm text-foreground/70">
+                Search
+              </Label>
+              <div className="relative mt-2">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
+                <Input
+                  id="bae-search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search documents, forms, notices, or references"
+                  className="pl-9"
+                />
               </div>
-            </>
-          ) : null}
-        </DialogContent>
-      </Dialog>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 md:w-[340px] md:shrink-0">
+              <div className="min-w-0">
+                <Label className="text-sm text-foreground/70">Year</Label>
+                <Select value={year} onValueChange={setYear}>
+                  <SelectTrigger className="mt-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All years</SelectItem>
+                    {years.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="min-w-0">
+                <Label className="text-sm text-foreground/70">Sort</Label>
+                <Select value={sort} onValueChange={(value) => setSort(value as SortKey)}>
+                  <SelectTrigger className="mt-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest first</SelectItem>
+                    <SelectItem value="oldest">Oldest first</SelectItem>
+                    <SelectItem value="title_asc">Title A to Z</SelectItem>
+                    <SelectItem value="title_desc">Title Z to A</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {filtered.length > 0 ? (
+          <div className="grid gap-4 2xl:grid-cols-2">
+            {filtered.map((item) => (
+              <DocumentCard key={item.id} item={item} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState />
+        )}
+      </div>
     </div>
   );
 };
 
 export const BoardOfArchitecturalEducationView = ({ breadcrumb }: { breadcrumb: string }) => {
-  const dynamicDocs = useMemo(() => baeAdminStorage.documents.getAll([]), []);
+  const location = useLocation();
+  const [documents, setDocuments] = useState<BaeDocumentItem[]>([]);
+  const [logo, setLogo] = useState("");
+  const [introduction, setIntroduction] = useState(defaultBaeIntroduction);
+  const [loading, setLoading] = useState(true);
 
-  const appDocs = dynamicDocs.filter((d) => d.category === "applications");
-  const noticeDocs = dynamicDocs.filter((d) => d.category === "notices");
-  const refDocs = dynamicDocs.filter((d) => d.category === "references");
+  useEffect(() => {
+    Promise.all([baeDocumentApi.list(), boardApi.list(), baeSettingApi.show()])
+      .then(([items, boards, settings]) => {
+        setDocuments(items.filter((item) => item.is_active));
+        setLogo(boards.find((board) => board.path === "/bae")?.icon || "/images/board-bae.svg");
+        setIntroduction(settings.introduction || defaultBaeIntroduction);
+      })
+      .catch((err) => console.warn("Failed to fetch BAE content:", err))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const displayApplications = appDocs.length > 0 ? appDocs : applications;
-  const displayNotices = noticeDocs.length > 0 ? noticeDocs : notices;
-  const displayReferences = refDocs.length > 0 ? refDocs : references;
+  useEffect(() => {
+    if (location.hash !== "#bae-documents") return;
+
+    window.setTimeout(() => {
+      document.getElementById("bae-documents")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  }, [loading, location.hash, location.search]);
 
   return (
-    <PageLayout
-      title="Board of Architectural Education"
-      subtitle="Documents and member listings"
-      breadcrumb={breadcrumb}
-    >
+    <PageLayout title="Board of Architectural Education" subtitle="Education, documents and member resources" breadcrumb={breadcrumb}>
       <section className="py-16">
-        <div className="container max-w-6xl mx-auto space-y-10">
-          <Tabs defaultValue="introduction" className="space-y-6">
-            <TabsList className="w-full h-auto flex flex-wrap justify-start gap-1">
-              <TabsTrigger value="introduction" className="flex-1 sm:flex-none">
-                Introduction
-              </TabsTrigger>
-              <TabsTrigger value="documents" className="flex-1 sm:flex-none">
-                Documents
-              </TabsTrigger>
-              <TabsTrigger value="graduate" className="flex-1 sm:flex-none">
-                <span className="sm:hidden">Graduates</span>
-                <span className="hidden sm:inline">Graduate members</span>
-              </TabsTrigger>
-              <TabsTrigger value="student" className="flex-1 sm:flex-none">
-                <span className="sm:hidden">Students</span>
-                <span className="hidden sm:inline">Student members</span>
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="introduction" className="mt-0">
-              <div className="rounded-3xl border border-border bg-card p-8 md:p-10 shadow-sm relative overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(800px_circle_at_20%_0%,hsl(var(--primary)/0.14),transparent_55%),radial-gradient(700px_circle_at_80%_20%,hsl(var(--secondary)/0.12),transparent_55%)]" />
-                <div className="relative">
-                  <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground tracking-tight">
-                    Introduction
-                  </h2>
-                  <div className="w-16 h-1 rounded-full bg-gradient-to-r from-primary/70 via-secondary/60 to-accent/50 mt-4" />
-                  <div className="mt-8 flex flex-wrap gap-3">
-                    <Button asChild>
-                      <Link to="/bae-admin/login">BAE Login (Authorities)</Link>
-                    </Button>
-                    <Button variant="secondary" asChild>
-                      <Link to="/about-bae">About this Board</Link>
-                    </Button>
-                  </div>
-                  <p className="mt-5 text-foreground/75 leading-relaxed max-w-3xl text-lg">
-                    The Board of Architectural Education supports the Institute’s education and examination
-                    related work. Use the tabs to browse documents, graduate members, and student members.
-                  </p>
+        <div className="mx-auto w-full max-w-7xl space-y-10 px-3 sm:px-4 lg:px-6">
+          <div className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-8 md:p-10">
+            <div className="mb-6 flex flex-col gap-5 sm:flex-row sm:items-center">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-border bg-background p-3 shadow-sm">
+                {logo ? (
+                  <img src={logo} alt="Board of Architectural Education logo" className="h-full w-full object-contain" />
+                ) : (
+                  <GraduationCap className="h-8 w-8 text-primary" />
+                )}
+              </div>
+              <div>
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-foreground/60">
+                  <BookOpenCheck className="h-3.5 w-3.5 text-primary" />
+                  Board of Architectural Education
                 </div>
+                <h2 className="font-heading text-3xl font-bold tracking-tight text-foreground md:text-4xl">Introduction</h2>
               </div>
-            </TabsContent>
+            </div>
+            <div className="mt-4 h-px w-16 bg-border" />
+            <div className="mt-5 max-w-3xl whitespace-pre-line text-lg leading-relaxed text-foreground/75">{introduction}</div>
+            <div className="mt-8 flex flex-wrap gap-6">
+              <Link to="/about-bae" className="text-sm font-medium text-foreground/60 hover:text-foreground hover:underline">
+                About this Board
+              </Link>
+              <a href="#bae-documents" className="text-sm font-medium text-primary hover:underline">
+                View Documents
+              </a>
+            </div>
+          </div>
 
-            <TabsContent value="documents" className="mt-0">
-              <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
-                <Tabs defaultValue="applications" className="space-y-6">
-                  <TabsList className="w-full h-auto flex flex-wrap justify-start gap-1">
-                    <TabsTrigger value="applications" className="flex-1 sm:flex-none">
-                      Applications
-                    </TabsTrigger>
-                    <TabsTrigger value="notices" className="flex-1 sm:flex-none">
-                      Notices
-                    </TabsTrigger>
-                    <TabsTrigger value="references" className="flex-1 sm:flex-none">
-                      References
-                    </TabsTrigger>
-                  </TabsList>
+          <section id="bae-documents" className="scroll-mt-28 space-y-8">
+            <div className="max-w-3xl">
+              <p className="text-sm font-semibold uppercase tracking-widest text-primary">Library</p>
+              <h2 className="mt-2 font-heading text-3xl font-bold text-foreground md:text-4xl">Documents</h2>
+              <p className="mt-4 text-foreground/70">
+                Browse education-related documents by section, year, or title. Each record opens the uploaded file or linked resource.
+              </p>
+            </div>
 
-                  <TabsContent value="applications" className="mt-0">
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {displayApplications.map((item) => (
-                        <DocumentCard key={item.title + (("downloadName" in item) ? (item as any).downloadName : "")} item={item} />
-                      ))}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="notices" className="mt-0">
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {displayNotices.map((item) => (
-                        <DocumentCard key={item.title + (("downloadName" in item) ? (item as any).downloadName : "")} item={item} />
-                      ))}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="references" className="mt-0">
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {displayReferences.map((item) => (
-                        <DocumentCard key={item.title + (("downloadName" in item) ? (item as any).downloadName : "")} item={item} />
-                      ))}
-                    </div>
-                  </TabsContent>
-                </Tabs>
+            {loading ? (
+              <div className="flex items-center justify-center rounded-3xl border border-border bg-card py-20">
+                <Loader2 className="h-10 w-10 animate-spin text-primary/50" />
               </div>
-            </TabsContent>
+            ) : (
+              <DocumentLibrary documents={documents} />
+            )}
+          </section>
 
-            <TabsContent value="graduate" className="mt-0">
-              <MemberTable
-                title="Graduate members"
-                accentClass="from-primary/60 to-transparent"
-                members={
-                  baeAdminStorage.graduates.getAll([]).length
-                    ? baeAdminStorage.graduates.getAll([]).map(toPublicMember)
-                    : graduateMembersFallback
-                }
-              />
-            </TabsContent>
+          <section className="grid gap-5 md:grid-cols-2">
+            <Link
+              to="/bae/graduate-members"
+              className="group rounded-3xl border border-border bg-card p-6 shadow-sm transition hover:border-primary/45 hover:shadow-md sm:p-8"
+            >
+              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <GraduationCap className="h-7 w-7" />
+              </div>
+              <p className="text-sm font-semibold uppercase tracking-widest text-primary">Members</p>
+              <h2 className="mt-2 font-heading text-2xl font-bold text-foreground group-hover:text-primary">Graduate Members</h2>
+              <p className="mt-4 text-foreground/70">View the separate Graduate Members page.</p>
+              <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                Open page
+                <ArrowUpRight className="h-4 w-4" />
+              </span>
+            </Link>
 
-            <TabsContent value="student" className="mt-0">
-              <MemberTable
-                title="Student members"
-                accentClass="from-secondary/60 to-transparent"
-                members={
-                  baeAdminStorage.students.getAll([]).length
-                    ? baeAdminStorage.students.getAll([]).map(toPublicMember)
-                    : studentMembersFallback
-                }
-              />
-            </TabsContent>
-          </Tabs>
+            <Link
+              to="/bae/student-members"
+              className="group rounded-3xl border border-border bg-card p-6 shadow-sm transition hover:border-primary/45 hover:shadow-md sm:p-8"
+            >
+              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <Users className="h-7 w-7" />
+              </div>
+              <p className="text-sm font-semibold uppercase tracking-widest text-primary">Members</p>
+              <h2 className="mt-2 font-heading text-2xl font-bold text-foreground group-hover:text-primary">Student Members</h2>
+              <p className="mt-4 text-foreground/70">View the separate Student Members page.</p>
+              <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                Open page
+                <ArrowUpRight className="h-4 w-4" />
+              </span>
+            </Link>
+
+          </section>
         </div>
       </section>
     </PageLayout>

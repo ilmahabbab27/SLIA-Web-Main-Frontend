@@ -1,10 +1,9 @@
 import SiteHeader from "@/components/SiteHeader";
 import HeroCarousel from "@/components/HeroCarousel";
-import EventsCarousel from "@/components/EventsCarousel";
 import AboutSection from "@/components/AboutSection";
 import BoardsSection from "@/components/BoardsSection";
 import WhyArchitectSection from "@/components/WhyArchitectSection";
-import VideoSection from "@/components/VideoSection";
+import SliaEventsSection from "@/components/SliaEventsSection";
 import KeyHighlightsSection from "@/components/KeyHighlightsSection";
 import NewsSection from "@/components/NewsSection";
 import BecomeArchitect from "@/components/BecomeArchitect";
@@ -17,13 +16,13 @@ const Index = () => {
       <SiteHeader />
       <main>
         <HeroCarousel />
-        <EventsCarousel />
+        <KeyHighlightsSection />
+        <NewsSection />
+
         <AboutSection />
         <WhyArchitectSection />
         <BoardsSection />
-        <VideoSection />
-        <KeyHighlightsSection />
-        <NewsSection />
+        <SliaEventsSection />
         <BecomeArchitect />
         <FAQSection />
       </main>

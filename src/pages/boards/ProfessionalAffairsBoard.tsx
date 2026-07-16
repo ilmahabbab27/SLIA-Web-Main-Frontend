@@ -214,11 +214,17 @@ export const ProfessionalAffairsBoardView = ({ breadcrumb }: { breadcrumb: strin
             <p className="mt-7 max-w-3xl text-lg leading-relaxed text-foreground/75 md:text-xl">
               {introduction.description}
             </p>
-            <div className="mt-8 flex flex-wrap gap-6">
-              <a href="#pab-items" className="text-sm font-semibold text-primary hover:underline">
-                Browse items
+            <div className="mt-8 flex flex-wrap gap-3">
+              <a href="#cpd-events" className="rounded-lg bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20 transition">
+                CPD Events
               </a>
-              <Link to="/about-pab" className="text-sm font-medium text-foreground/60 hover:text-foreground hover:underline">
+              <a href="#applications-items" className="rounded-lg bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20 transition">
+                Applications
+              </a>
+              <a href="#publications-items" className="rounded-lg bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20 transition">
+                Publications
+              </a>
+              <Link to="/about-pab" className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground/60 hover:bg-muted transition">
                 About this Board
               </Link>
             </div>
@@ -254,14 +260,19 @@ export const ProfessionalAffairsBoardView = ({ breadcrumb }: { breadcrumb: strin
 
           {/* CPD Events Section */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <CalendarDays className="h-5 w-5 text-primary" />
-              <h3 className="font-heading text-2xl font-bold text-foreground">CPD Events</h3>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <CalendarDays className="h-5 w-5 text-primary" />
+                <h3 className="font-heading text-2xl font-bold text-foreground">CPD Events</h3>
+              </div>
+              <a href="#cpd-events" className="text-sm font-semibold text-primary hover:underline">
+                Browse items
+              </a>
             </div>
             {filtered.filter((item) => item.type === "cpd").length === 0 ? (
               <EmptyState />
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div id="cpd-events" className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {filtered
                   .filter((item) => item.type === "cpd")
                   .map((item, idx) => (
@@ -278,14 +289,19 @@ export const ProfessionalAffairsBoardView = ({ breadcrumb }: { breadcrumb: strin
 
           {/* Applications Section */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <FileText className="h-5 w-5 text-primary" />
-              <h3 className="font-heading text-2xl font-bold text-foreground">Applications</h3>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <FileText className="h-5 w-5 text-primary" />
+                <h3 className="font-heading text-2xl font-bold text-foreground">Applications</h3>
+              </div>
+              <a href="#applications-items" className="text-sm font-semibold text-primary hover:underline">
+                Browse items
+              </a>
             </div>
             {filtered.filter((item) => item.type === "applications").length === 0 ? (
               <EmptyState />
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div id="applications-items" className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {filtered
                   .filter((item) => item.type === "applications")
                   .map((item, idx) => (
@@ -302,14 +318,19 @@ export const ProfessionalAffairsBoardView = ({ breadcrumb }: { breadcrumb: strin
 
           {/* Publications Section */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Layers3 className="h-5 w-5 text-primary" />
-              <h3 className="font-heading text-2xl font-bold text-foreground">Publications</h3>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Layers3 className="h-5 w-5 text-primary" />
+                <h3 className="font-heading text-2xl font-bold text-foreground">Publications</h3>
+              </div>
+              <a href="#publications-items" className="text-sm font-semibold text-primary hover:underline">
+                Browse items
+              </a>
             </div>
             {filtered.filter((item) => item.type === "publications").length === 0 ? (
               <EmptyState />
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div id="publications-items" className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {filtered
                   .filter((item) => item.type === "publications")
                   .map((item, idx) => (

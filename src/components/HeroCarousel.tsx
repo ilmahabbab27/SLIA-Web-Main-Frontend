@@ -1,31 +1,92 @@
 import { useState, useEffect, useCallback } from "react";
-
 import { motion, AnimatePresence } from "framer-motion";
+import { heroApi, heroButtonApi, tickerApi, type HeroSlide as ApiSlide, type HeroButton, type TickerItem } from "@/lib/api";
 
-const slides = [
-  { image: "/images/hero-1.jpg", label: "Annual Subscriptions", heading: "Shaping the Future of Architecture", sub: "Join the premier professional body for architects in Sri Lanka" },
-  { image: "/images/hero-2.jpg", label: "Annual Subscriptions", heading: "Excellence in Design", sub: "Celebrating innovation and creativity in architectural practice" },
-  { image: "/images/hero-3.jpg", label: "Annual Subscriptions", heading: "Building Communities", sub: "Architecture that transforms lives and inspires generations" },
-  { image: "/images/hero-4.jpg", label: "Annual Subscriptions", heading: "Heritage & Modernity", sub: "Bridging Sri Lanka's rich architectural heritage with contemporary vision" },
-];
+type Slide = { image: string; tag: string; heading: string; sub: string; link: string };
 
+const heroSlidesCacheKey = "slia_home_hero_slides";
+
+const mapApiSlide = (s: ApiSlide): Slide => ({
+  image:   s.image,
+  tag:     s.tag     || "News & Events",
+  heading: s.title   || "",
+  sub:     s.description || "",
+  link:    s.link    || "#",
+});
+
+const getCachedSlides = (): Slide[] => {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const cached = window.localStorage.getItem(heroSlidesCacheKey);
+    const parsed = cached ? JSON.parse(cached) : [];
+    return Array.isArray(parsed) ? parsed.filter((slide) => slide?.image) : [];
+  } catch {
+    return [];
+  }
+};
+
+// ------------------------------------------------------------------ component
 const HeroCarousel = () => {
-  const [current, setCurrent] = useState(0);
+  const [current,   setCurrent]   = useState(0);
   const [direction, setDirection] = useState(1);
+  const [slides,    setSlides]    = useState<Slide[]>(getCachedSlides);
+  const [buttons,   setButtons]   = useState<HeroButton[]>([]);
+  const [tickers,   setTickers]   = useState<TickerItem[]>([]);
 
-  const next = useCallback(() => {
-    setDirection(1);
-    setCurrent((c) => (c + 1) % slides.length);
+  // ---- fetch slides + buttons + tickers from API on mount -----------------------
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchAll = async () => {
+      try {
+        const [slidesRes, btnsRes, tickersRes] = await Promise.allSettled([
+          heroApi.list(),
+          heroButtonApi.list(),
+          tickerApi.list(),
+        ]);
+
+        if (cancelled) return;
+
+        if (slidesRes.status === "fulfilled" && slidesRes.value.length > 0) {
+          const freshSlides = slidesRes.value.map(mapApiSlide).filter((slide) => slide.image);
+          setSlides(freshSlides);
+          setCurrent(0);
+          window.localStorage.setItem(heroSlidesCacheKey, JSON.stringify(freshSlides));
+        }
+        if (btnsRes.status === "fulfilled" && btnsRes.value.length > 0) {
+          setButtons(btnsRes.value.filter((b) => b.is_active));
+        }
+        if (tickersRes.status === "fulfilled" && tickersRes.value.length > 0) {
+          setTickers(tickersRes.value.filter(t => t.is_active));
+        }
+      } catch (err) {
+        console.warn("HeroCarousel: API fetch failed.", err);
+      }
+    };
+
+    fetchAll();
+    return () => { cancelled = true; };
   }, []);
 
+  // ---- auto-advance ----------------------------------------------------
+  const next = useCallback(() => {
+    if (slides.length === 0) return;
+    setDirection(1);
+    setCurrent((c) => (c + 1) % slides.length);
+  }, [slides.length]);
 
   useEffect(() => {
-    const timer = setInterval(next, 7000); // Increased duration to 7 seconds
+    if (slides.length === 0) return;
+    const timer = setInterval(next, 7000);
     return () => clearInterval(timer);
-  }, [next]);
+  }, [next, slides.length]);
 
   return (
-    <section className="relative w-full h-screen overflow-hidden bg-black">
+    <section className="relative h-screen w-full overflow-hidden bg-black">
+
+      {/* Slides */}
+      {slides.length > 0 && (
       <AnimatePresence custom={direction}>
         <motion.div
           key={current}
@@ -38,51 +99,70 @@ const HeroCarousel = () => {
         >
           <img
             src={slides[current].image}
-            alt={`Sri Lankan architecture ${current + 1}`}
+            alt={slides[current].heading}
             className="w-full h-full object-cover"
           />
-          <div className="hero-overlay absolute inset-0" />
+          <div className="hero-overlay absolute inset-0 bg-black/45" />
         </motion.div>
       </AnimatePresence>
+      )}
 
-      {/* Animated text overlay */}
-      <div className="absolute inset-0 flex items-center justify-center z-10">
-        <div className="text-center px-4">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={current}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-4 drop-shadow-lg">
-                {slides[current].heading}
-              </h1>
-              <p className="text-primary-foreground/80 text-lg md:text-xl font-bold max-w-2xl mx-auto">
+      {/* Text block */}
+      {slides.length > 0 && (
+      <div className="absolute bottom-32 left-0 right-0 z-10 container">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={current}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="max-w-2xl"
+            style={{ position: "relative" }}
+          >
+            <span className="inline-block bg-primary text-primary-foreground text-xs font-semibold uppercase tracking-widest px-3 py-1 mb-4">
+              {slides[current].tag}
+            </span>
+            <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 drop-shadow-lg leading-tight">
+              {slides[current].heading}
+            </h1>
+            {slides[current].sub && (
+              <p className="text-white/80 text-base md:text-lg max-w-xl mb-6 line-clamp-3">
                 {slides[current].sub}
               </p>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+            )}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-6 mb-6">
+              <motion.a
+                href={slides[current].link}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="inline-block bg-white text-foreground px-6 py-2.5 text-sm font-semibold tracking-wide hover:bg-white/90 transition-colors shrink-0"
+              >
+                Read More &rarr;
+              </motion.a>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+      )}
+
+      {/* CTA buttons — loaded from DB */}
+      <div className="absolute right-6 top-[112px] z-10 flex w-[230px] flex-col gap-2 sm:right-8 sm:top-1/2 sm:w-auto sm:-translate-y-1/2 sm:gap-3">
+        {buttons.map((btn) => (
+          <motion.a
+            key={btn.id || btn.label}
+            href={btn.link || "#"}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className="inline-block bg-[#b5a07a]/85 px-6 py-3 text-left text-xs font-semibold tracking-widest text-white backdrop-blur-sm transition-colors hover:bg-[#b5a07a] sm:min-w-[260px] sm:px-8 sm:py-4 sm:text-sm"
+          >
+            {btn.label}
+          </motion.a>
+        ))}
       </div>
 
-      {/* CTA Button */}
-      <div className="absolute top-6 right-6 z-10">
-        <motion.a
-          href="#"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="bg-background/90 backdrop-blur-sm text-foreground px-6 py-3 text-sm font-medium border border-border hover:bg-background transition-colors inline-block"
-        >
-          Annual Subscriptions
-        </motion.a>
-      </div>
-
-
-
-      {/* Dots */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-50">
+      {/* Dot indicators moved up slightly to make room for full-width ticker */}
+      <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 flex gap-2">
         {slides.map((_, i) => (
           <motion.button
             key={i}
@@ -93,6 +173,50 @@ const HeroCarousel = () => {
           />
         ))}
       </div>
+
+      {tickers.length > 0 && (
+      <div className="absolute bottom-6 left-0 right-0 z-20 overflow-hidden border-y border-white/5 bg-black/30 py-3.5 backdrop-blur-xl">
+        <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-black/60 to-transparent z-10" />
+        <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-black/60 to-transparent z-10" />
+        
+        <motion.div
+          animate={{ x: ["100%", "-100%"] }}
+          transition={{
+            repeat: Infinity,
+            duration: tickers.length > 0 ? 40 : 20,
+            ease: "linear"
+          }}
+          className="whitespace-nowrap flex gap-16 items-center"
+          style={{ position: "relative" }}
+        >
+          <>
+              {tickers.map((t) => (
+                <a 
+                  key={t.id} 
+                  href={t.link || "#"} 
+                  className="text-white/90 text-[11px] font-bold uppercase tracking-[0.25em] hover:text-primary transition-colors flex items-center gap-3"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(234,179,8,0.6)]" />
+                  {t.text}
+                </a>
+              ))}
+              {[1, 2].map((set) => (
+                tickers.map((t) => (
+                  <a 
+                    key={`dup-${set}-${t.id}`} 
+                    href={t.link || "#"} 
+                    className="text-white/90 text-[11px] font-bold uppercase tracking-[0.25em] hover:text-primary transition-colors flex items-center gap-3"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(234,179,8,0.6)]" />
+                    {t.text}
+                  </a>
+                ))
+              ))}
+            </>
+        </motion.div>
+      </div>
+      )}
+
     </section>
   );
 };

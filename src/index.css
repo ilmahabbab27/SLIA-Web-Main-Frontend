@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,84 +6,101 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    /* Warm White #F7F5F1 */
+    --background: 40 28% 96%;
+    /* Graphite #222222 */
     --foreground: 0 0% 13%;
 
-    --card: 0 0% 100%;
+    --card: 40 28% 96%;
     --card-foreground: 0 0% 13%;
 
-    --popover: 0 0% 100%;
+    --popover: 40 28% 96%;
     --popover-foreground: 0 0% 13%;
 
-    --primary: 22 100% 45%;
+    /* Deep Forest Green #2F4A3A */
+    --primary: 144 22% 24%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 30 15% 95%;
+    /* Soft Sand #E6DFD6 */
+    --secondary: 34 24% 87%;
     --secondary-foreground: 0 0% 13%;
 
-    --muted: 30 10% 94%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 34 20% 92%;
+    /* Muted Stone Grey #A9A39B */
+    --muted-foreground: 34 8% 64%;
 
-    --accent: 22 100% 45%;
+    /* Deep Forest Green #2F4A3A */
+    --accent: 144 22% 24%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 30 10% 88%;
-    --input: 30 10% 88%;
-    --ring: 22 100% 45%;
+    --border: 34 12% 85%;
+    --input: 34 12% 85%;
+    --ring: 144 22% 24%;
 
     --radius: 0.25rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 40 28% 96%;
+    --sidebar-foreground: 0 0% 20%;
+    --sidebar-primary: 144 22% 24%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 34 24% 87%;
+    --sidebar-accent-foreground: 0 0% 13%;
+    --sidebar-border: 34 12% 85%;
+    --sidebar-ring: 144 22% 24%;
 
     /* Custom tokens */
-    --nav-bg: 0 0% 100%;
-    --nav-foreground: 0 0% 20%;
-    --section-dark-bg: 0 0% 13%;
-    --section-dark-foreground: 0 0% 95%;
-    --section-muted-bg: 30 15% 96%;
+    --nav-bg: 40 28% 96%;
+    --nav-foreground: 0 0% 13%;
+    --section-dark-bg: 144 22% 14%;
+    --section-dark-foreground: 40 28% 96%;
+    --section-muted-bg: 34 24% 87%;
     --hero-overlay: 0 0% 0%;
   }
 
   .dark {
-    --background: 0 0% 7%;
-    --foreground: 0 0% 95%;
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 95%;
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 22 100% 50%;
+    --background: 144 15% 8%;
+    --foreground: 40 28% 93%;
+    --card: 144 15% 11%;
+    --card-foreground: 40 28% 93%;
+    --popover: 144 15% 11%;
+    --popover-foreground: 40 28% 93%;
+    --primary: 144 20% 45%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
-    --accent: 22 100% 50%;
+    --secondary: 144 12% 18%;
+    --secondary-foreground: 40 28% 93%;
+    --muted: 144 12% 18%;
+    --muted-foreground: 34 8% 64%;
+    --accent: 144 20% 45%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 95%;
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 22 100% 50%;
+    --destructive-foreground: 40 28% 93%;
+    --border: 144 12% 22%;
+    --input: 144 12% 22%;
+    --ring: 144 20% 45%;
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+    border-radius: 0 !important;
+  }
+
+  /* Preserve circular shape only where explicitly needed */
+  .rounded-full {
+    border-radius: 9999px !important;
   }
 
   body {
     @apply bg-background text-foreground font-body antialiased;
+    position: relative;
+  }
+
+  #root {
+    position: relative;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -92,10 +109,6 @@
 }
 
 @layer utilities {
-  .hero-overlay {
-    background: linear-gradient(to bottom, hsla(var(--hero-overlay), 0.15), hsla(var(--hero-overlay), 0.3));
-  }
-
   .section-dark {
     background-color: hsl(var(--section-dark-bg));
     color: hsl(var(--section-dark-foreground));
@@ -106,8 +119,6 @@
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(22 85% 55%));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: hsl(var(--primary));
   }
 }

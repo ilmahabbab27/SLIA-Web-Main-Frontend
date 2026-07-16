@@ -31,7 +31,7 @@ const WhyArchitectSection = () => {
                                 <h2 className="font-heading text-3xl md:text-5xl font-bold text-foreground tracking-tight mb-6">
                                     Why an Architect?
                                 </h2>
-                                <div className="w-20 h-1.5 rounded-full bg-gradient-to-r from-primary via-secondary to-accent mb-8" />
+                                <div className="w-20 h-px bg-border mb-8" />
                             </div>
 
                             <div className="space-y-6 text-foreground/80 leading-relaxed text-lg">

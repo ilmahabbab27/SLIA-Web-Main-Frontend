@@ -1,66 +1,65 @@
+import { useEffect, useMemo, useState } from "react";
 import PageLayout from "@/components/PageLayout";
-import { useEffect, useState } from "react";
+import { eventApi, newsApi, type EventItem, type NewsItem as ApiNewsItem } from "@/lib/api";
+import { Search } from "lucide-react";
 
-type NewsItem = { title: string; date: string; desc: string; link: string; imageDataUrl?: string };
+type NewsItem = {
+  title: string;
+  date: string;
+  desc: string;
+  link: string;
+  image?: string;
+};
 
-const fallbackNews: NewsItem[] = [
-  {
-    title: "Online Revit Course for Architects",
-    date: "January 2025",
-    desc: "The Sri Lanka Institute of Architects has scheduled the 9th intake of the online Certificate Course in Revit.",
-    link: "#",
-  },
-  {
-    title: "Trainer Practices Registration for 2024",
-    date: "December 2024",
-    desc: "SLIA Council ratified a BAE recommendation to register Trainer Practices annually.",
-    link: "#",
-  },
-  {
-    title: "Call for Entries for Annual Awards 2023/24",
-    date: "November 2024",
-    desc: "Design Award, Colour Award, Young Architect of the Year Award, Research Award and more.",
-    link: "#",
-  },
-  {
-    title: "BAE Notice — Periodical Assessment",
-    date: "October 2024",
-    desc: "Applications for exemption from the Parts I & II Examinations are assessed by the BAE.",
-    link: "#",
-  },
-];
+const mapApiNews = (item: ApiNewsItem): NewsItem => ({
+  title: item.title,
+  date: item.subtitle || "",
+  desc: item.description || "",
+  image: item.image,
+  link: item.link || "/latest-news",
+});
+
+const mapEventNews = (item: EventItem): NewsItem => ({
+  title: item.title,
+  date: item.date || item.subtitle || "",
+  desc: item.description || "",
+  image: item.images?.[0] || item.image,
+  link: `/events/${item.id}`,
+});
 
 const LatestNews = () => {
-  const [newsItems, setNewsItems] = useState<NewsItem[]>(fallbackNews);
+  const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    const raw = localStorage.getItem("site_news_v1");
-    if (!raw) return;
-    try {
-      const parsed = JSON.parse(raw) as Array<{
-        title?: string;
-        date?: string;
-        description?: string;
-        imageDataUrl?: string;
-        link?: string;
-      }>;
-      if (!Array.isArray(parsed) || parsed.length === 0) return;
+    Promise.all([eventApi.list("latest"), newsApi.list("news")])
+      .then(([eventItems, newsItems]) => {
+        const eventNews = eventItems
+          .filter((item) => item.is_active && item.title)
+          .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+          .map(mapEventNews);
 
-      const next = parsed
-        .filter((n) => n?.title && n?.date && n?.description)
-        .map((n) => ({
-          title: String(n.title),
-          date: String(n.date),
-          desc: String(n.description),
-          imageDataUrl: n.imageDataUrl ? String(n.imageDataUrl) : undefined,
-          link: String(n.link ?? "#"),
-        }));
+        const legacyNews = newsItems
+          .filter((item) => item.is_active && item.title)
+          .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+          .map(mapApiNews);
 
-      if (next.length > 0) setNewsItems(next);
-    } catch {
-      // ignore
-    }
+        setNewsItems([...eventNews, ...legacyNews]);
+      })
+      .catch((err) => console.warn("Failed to fetch latest news:", err));
   }, []);
+
+  const filteredNewsItems = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return newsItems;
+
+    return newsItems.filter((item) =>
+      [item.title, item.date, item.desc]
+        .join(" ")
+        .toLowerCase()
+        .includes(query)
+    );
+  }, [newsItems, searchQuery]);
 
   return (
     <PageLayout
@@ -69,31 +68,49 @@ const LatestNews = () => {
       breadcrumb="News & Events / Latest News"
     >
       <section className="py-16">
-        <div className="container">
-          <div className="grid md:grid-cols-2 gap-6">
-            {newsItems.map((item, i) => (
-              <div key={i} className="border border-border p-6 rounded-sm hover:shadow-lg transition-shadow group">
-                {item.imageDataUrl ? (
-                  <div className="mb-4 overflow-hidden rounded-sm border border-border">
+        <div className="container space-y-8">
+          <div className="relative max-w-xl">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search latest news"
+              className="h-12 w-full border border-border bg-card pl-11 pr-4 text-sm text-foreground outline-none transition focus:border-primary"
+            />
+          </div>
+
+          {filteredNewsItems.length > 0 ? (
+            <div className="grid gap-6 md:grid-cols-2">
+              {filteredNewsItems.map((item, i) => (
+              <div key={`${item.title}-${i}`} className="group border border-border p-6 transition-shadow hover:shadow-lg">
+                {item.image ? (
+                  <div className="mb-4 overflow-hidden border border-border">
                     <img
-                      src={item.imageDataUrl}
+                      src={item.image}
                       alt={item.title}
-                      className="h-44 w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="h-44 w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"
                     />
                   </div>
                 ) : null}
-                <span className="text-primary text-xs font-semibold uppercase tracking-wider">{item.date}</span>
-                <h3 className="font-heading text-lg font-bold text-foreground mt-1 mb-2 group-hover:text-primary transition-colors">
+                {item.date ? (
+                  <span className="text-xs font-semibold uppercase tracking-wider text-primary">{item.date}</span>
+                ) : null}
+                <h3 className="mt-1 font-heading text-lg font-bold text-foreground transition-colors group-hover:text-primary">
                   {item.title}
                 </h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
-                <a href={item.link || "#"} className="inline-block mt-3 text-primary text-sm font-semibold hover:underline">
-                  Read More →
+                {item.desc ? <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.desc}</p> : null}
+                <a href={item.link || "/latest-news"} className="mt-4 inline-block text-sm font-semibold text-primary hover:underline">
+                  Read More &rarr;
                 </a>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="border border-dashed border-border py-16 text-center text-muted-foreground">
+              No news items match your search.
+            </div>
+          )}
         </div>
       </section>
     </PageLayout>

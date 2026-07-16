@@ -44,7 +44,7 @@ const AboutSection = () => {
               ))}
             </div>
 
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} style={{ position: "relative" }}>
               <Link to="/about" className="inline-block bg-primary text-primary-foreground font-medium px-8 py-3 rounded-md hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
                 See More
               </Link>
@@ -107,7 +107,7 @@ const AboutSection = () => {
             </ScrollReveal>
 
             <ScrollReveal variant="fadeRight" delay={0.3} className="flex-1">
-              <div className="bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 p-6 md:p-8 rounded-2xl relative overflow-hidden h-full flex flex-col justify-center group">
+              <div className="bg-primary/12 border border-primary/30 p-6 md:p-8 rounded-2xl relative overflow-hidden h-full flex flex-col justify-center group">
                 <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
                   <Target className="w-32 h-32 text-primary" />
                 </div>
@@ -154,7 +154,7 @@ const AboutSection = () => {
               { target: 12, label: "Founding Members" },
             ].map((stat, i) => (
               <div key={i} className="bg-white/5 border border-white/5 rounded-2xl p-6 text-center hover:bg-white/10 hover:border-white/10 transition-all duration-300 transform hover:-translate-y-1">
-                <AnimatedCounter target={stat.target} suffix={stat.suffix} label={stat.label} className="text-3xl md:text-4xl font-bold text-white mb-3 inline-block" />
+                <AnimatedCounter target={stat.target} suffix={stat.suffix} className="text-3xl md:text-4xl font-bold text-white mb-3 inline-block" />
                 <p className="text-section-dark-foreground/60 text-xs md:text-sm font-medium uppercase tracking-widest">{stat.label}</p>
               </div>
             ))}

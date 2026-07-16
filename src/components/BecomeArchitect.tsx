@@ -40,7 +40,7 @@ const BecomeArchitect = () => {
             Becoming a registered architect involves a combination of education,
             experience, and examination.
           </p>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} style={{ position: "relative" }}>
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 text-sm uppercase tracking-wider font-semibold">
               Read More
             </Button>

@@ -42,7 +42,7 @@ const AnimatedCounter = ({ target, suffix = "", prefix = "", duration = 2000, cl
       <div className="font-heading text-4xl md:text-5xl font-bold text-primary">
         {prefix}{count.toLocaleString()}{suffix}
       </div>
-      <p className="text-muted-foreground text-sm mt-2 uppercase tracking-wider">{label}</p>
+      {label && <p className="text-muted-foreground text-sm mt-2 uppercase tracking-wider">{label}</p>}
     </div>
   );
 };

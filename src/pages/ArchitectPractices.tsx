@@ -12,14 +12,7 @@ type PracticeRow = {
   contact: string;
 };
 
-const practices: PracticeRow[] = [
-  {
-    name: "Sample Practice",
-    location: "Colombo",
-    services: "Architecture, Interior Design",
-    contact: "practice@example.com",
-  },
-];
+const practices: PracticeRow[] = [];
 
 const ArchitectPractices = () => {
   const [query, setQuery] = useState("");
@@ -41,7 +34,7 @@ const ArchitectPractices = () => {
           <ScrollReveal variant="fadeUp">
             <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
               <p className="text-foreground/70 leading-relaxed">
-                Search practices by name, location, services, or contact. Replace the sample row with your real data.
+                Search practices by name, location, services, or contact.
               </p>
             </div>
           </ScrollReveal>

@@ -3,6 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
+import SplashScreen from "./components/SplashScreen";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import AnnualAwards from "./pages/AnnualAwards";
@@ -15,6 +18,9 @@ import LatestNews from "./pages/LatestNews";
 import UpcomingEvents from "./pages/UpcomingEvents";
 import PastEvents from "./pages/PastEvents";
 import Events from "./pages/Events";
+import EventsCalander from "./pages/EventsCalander";
+import LineArtReview from "./pages/LineArtReview";
+import EventDetail from "./pages/EventDetail";
 import SliaAnnualSessions from "./pages/SliaAnnualSessions";
 import Courses from "./pages/Courses";
 import Examinations from "./pages/Examinations";
@@ -37,39 +43,34 @@ import BoardOfArchitecturalPublications, {
 } from "./pages/about/BoardOfArchitecturalPublications";
 import BoardOfArchitecturalPublicationsBoards from "./pages/boards/BoardOfArchitecturalPublications";
 import Boards from "./pages/Boards";
+import AdminLayout from "./components/admin/AdminLayout";
+import RequireAdminAuth from "./components/admin/RequireAdminAuth";
+import AdminLogin from "./pages/admin/AdminLogin";
+import Dashboard from "./pages/admin/Dashboard";
+import HeroManager from "./pages/admin/HeroManager";
+import EventManager from "./pages/admin/EventManager";
+import AnnualEventsManager from "./pages/admin/AnnualEventsManager";
+import BoardManager from "./pages/admin/BoardManager";
+import BoardMembersManager from "./pages/admin/BoardMembersManager";
+import CouncilManager from "./pages/admin/CouncilManager";
+import ContactManager from "./pages/admin/ContactManager";
+import FAQManager from "./pages/admin/FAQManager";
+import TickerManager from "./pages/admin/TickerManager";
+import ContentManager from "./pages/admin/ContentManager";
+import AdminUsersManager from "./pages/admin/AdminUsersManager";
 import SliaAwards from "./pages/SliaAwards";
-import BaeAdminLogin from "./pages/baeAdmin/Login";
-import BaeAdminDashboard from "./pages/baeAdmin/Dashboard";
-import BaeAdminStudents from "./pages/baeAdmin/Students";
-import BaeAdminGraduates from "./pages/baeAdmin/Graduates";
-import BaeAdminDocuments from "./pages/baeAdmin/Documents";
-import RequireBaeAdminAuth from "./pages/baeAdmin/RequireAuth";
-import BapAdminLogin from "./pages/bapAdmin/Login";
-import BapAdminDashboard from "./pages/bapAdmin/Dashboard";
-import BapAdminPublications from "./pages/bapAdmin/Publications";
-import RequireBapAdminAuth from "./pages/bapAdmin/RequireAuth";
-import BomAdminLogin from "./pages/bomadmin/Login";
-import BomAdminDashboard from "./pages/bomadmin/Dashboard";
-import BomAdminManagement from "./pages/bomadmin/Management";
-import RequireBomAdminAuth from "./pages/bomadmin/RequireAuth";
-
-import PabAdminLogin from "./pages/pabAdmin/Login";
-import PabAdminDashboard from "./pages/pabAdmin/Dashboard";
-import PabAdminManagement from "./pages/pabAdmin/Management";
-import RequirePabAdminAuth from "./pages/pabAdmin/RequireAuth";
-import MainAdminLogin from "./pages/mainAdmin/Login";
-import MainAdminDashboard from "./pages/mainAdmin/Dashboard";
-import RequireMainAdminAuth from "./pages/mainAdmin/RequireAuth";
+import AwardCategoriesManager from "./pages/admin/AwardCategoriesManager";
+import BapManager from "./pages/admin/BapManager";
+import BomManager from "./pages/admin/BomManager";
+import BaeManager from "./pages/admin/BaeManager";
+import PabManager from "./pages/admin/PabManager";
+import SliaManager from "./pages/admin/SliaManager";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
+const AppRoutes = () => (
+  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/annual-awards" element={<AnnualAwards />} />
           <Route path="/architect-exhibition" element={<ArchitectExhibition />} />
@@ -79,126 +80,51 @@ const App = () => (
           <Route path="/why-be-an-architect" element={<WhyBeAnArchitect />} />
           <Route path="/latest-news" element={<LatestNews />} />
           <Route path="/events" element={<Events />} />
+          <Route path="/eventscalander" element={<EventsCalander />} />
+          <Route path="/line-art-review" element={<LineArtReview />} />
+          <Route path="/events/:id" element={<EventDetail />} />
           <Route path="/slia-annual-sessions" element={<SliaAnnualSessions />} />
           <Route path="/upcoming-events" element={<UpcomingEvents />} />
           <Route path="/past-events" element={<PastEvents />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/examinations" element={<Examinations />} />
-          <Route path="/bae-notices" element={<Navigate to="/bae" replace />} />
+          <Route path="/bae-notices" element={<Navigate to="/bae?section=notices#bae-documents" replace />} />
           <Route path="/publications" element={<Publications />} />
           <Route path="/specifications" element={<Specifications />} />
-          <Route path="/downloads" element={<Navigate to="/bae" replace />} />
+          <Route path="/downloads" element={<Navigate to="/bae#bae-documents" replace />} />
           <Route path="/history" element={<History />} />
           <Route path="/council" element={<Council />} />
           <Route path="/objectives" element={<Objectives />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route element={<RequireAdminAuth />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="hero" element={<HeroManager />} />
+              <Route path="events" element={<EventManager />} />
+              <Route path="annual-events" element={<AnnualEventsManager />} />
+              <Route path="council" element={<CouncilManager />} />
+              <Route path="board-members" element={<BoardMembersManager />} />
+              <Route path="boards" element={<BoardManager />} />
+              <Route path="bom" element={<BomManager />} />
+              <Route path="bae" element={<BaeManager />} />
+              <Route path="bap" element={<BapManager />} />
+              <Route path="pab" element={<PabManager />} />
+              <Route path="slia" element={<SliaManager />} />
+              <Route path="contact" element={<ContactManager />} />
+              <Route path="faqs" element={<FAQManager />} />
+              <Route path="ticker" element={<TickerManager />} />
+              <Route path="award-categories" element={<AwardCategoriesManager />} />
+              <Route path="content" element={<ContentManager />} />
+              <Route path="users" element={<AdminUsersManager />} />
+            </Route>
+          </Route>
+
           <Route path="/boards" element={<Boards />} />
+
           <Route path="/slia-awards" element={<SliaAwards />} />
 
-          {/* BAE Admin */}
-          <Route path="/bae-admin/login" element={<BaeAdminLogin />} />
-          <Route
-            path="/bae-admin"
-            element={
-              <RequireBaeAdminAuth>
-                <BaeAdminDashboard />
-              </RequireBaeAdminAuth>
-            }
-          />
-          <Route
-            path="/bae-admin/students"
-            element={
-              <RequireBaeAdminAuth>
-                <BaeAdminStudents />
-              </RequireBaeAdminAuth>
-            }
-          />
-          <Route
-            path="/bae-admin/graduates"
-            element={
-              <RequireBaeAdminAuth>
-                <BaeAdminGraduates />
-              </RequireBaeAdminAuth>
-            }
-          />
-
-          <Route
-            path="/bae-admin/documents"
-            element={
-              <RequireBaeAdminAuth>
-                <BaeAdminDocuments />
-              </RequireBaeAdminAuth>
-            }
-          />
-
-          {/* BAP Admin */}
-          <Route path="/bap-admin/login" element={<BapAdminLogin />} />
-          <Route
-            path="/bap-admin"
-            element={
-              <RequireBapAdminAuth>
-                <BapAdminDashboard />
-              </RequireBapAdminAuth>
-            }
-          />
-          <Route
-            path="/bap-admin/publications"
-            element={
-              <RequireBapAdminAuth>
-                <BapAdminPublications />
-              </RequireBapAdminAuth>
-            }
-          />
-
-          {/* BOM Admin */}
-          <Route path="/bom-admin/login" element={<BomAdminLogin />} />
-          <Route
-            path="/bom-admin"
-            element={
-              <RequireBomAdminAuth>
-                <BomAdminDashboard />
-              </RequireBomAdminAuth>
-            }
-          />
-          <Route
-            path="/bom-admin/management"
-            element={
-              <RequireBomAdminAuth>
-                <BomAdminManagement />
-              </RequireBomAdminAuth>
-            }
-          />
-
-          {/* PAB Admin */}
-          <Route path="/pab-admin/login" element={<PabAdminLogin />} />
-          <Route
-            path="/pab-admin"
-            element={
-              <RequirePabAdminAuth>
-                <PabAdminDashboard />
-              </RequirePabAdminAuth>
-            }
-          />
-          <Route
-            path="/pab-admin/management"
-            element={
-              <RequirePabAdminAuth>
-                <PabAdminManagement />
-              </RequirePabAdminAuth>
-            }
-          />
-
-          {/* Main Admin */}
-          <Route path="/admin/login" element={<MainAdminLogin />} />
-          <Route
-            path="/admin"
-            element={
-              <RequireMainAdminAuth>
-                <MainAdminDashboard />
-              </RequireMainAdminAuth>
-            }
-          />
 
 
           {/* Friendly aliases: About Us */}
@@ -215,10 +141,28 @@ const App = () => (
           <Route path="/pab" element={<ProfessionalAffairsBoard />} />
           <Route path="/bap" element={<BoardOfArchitecturalPublicationsBoards />} />
           <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+    </Routes>
+  </BrowserRouter>
+);
+
+const App = () => {
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShowSplash(false), 1400);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AnimatePresence mode="wait">{showSplash && <SplashScreen />}</AnimatePresence>
+        <AppRoutes />
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;

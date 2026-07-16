@@ -1,6 +1,20 @@
-import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+
+const breadcrumbPaths: Record<string, string> = {
+  "Home": "/",
+  "News & Events": "/latest-news",
+  "Events": "/events",
+  "Education": "/courses",
+  "Boards": "/boards",
+  "BAE": "/bae",
+  "Graduate Member": "/bae/graduate-members",
+  "Graduate Members": "/bae/graduate-members",
+  "Student Member": "/bae/student-members",
+  "Student Members": "/bae/student-members",
+  "About Us": "/about",
+};
 
 interface PageLayoutProps {
   children: React.ReactNode;
@@ -11,44 +25,28 @@ interface PageLayoutProps {
 }
 
 const PageLayout = ({ children, title, subtitle, breadcrumb, action }: PageLayoutProps) => {
-  const [heroImage, setHeroImage] = useState("/images/hero-1.jpg");
-
-  useEffect(() => {
-    // Prefer the admin-managed hero items list; fall back to legacy single-image key.
-    const rawItems = localStorage.getItem("site_hero_items_v1");
-    if (rawItems) {
-      try {
-        const parsed = JSON.parse(rawItems) as Array<{ imageDataUrl?: string }>;
-        const first = Array.isArray(parsed) ? parsed.find((i) => i?.imageDataUrl) : null;
-        if (first?.imageDataUrl && first.imageDataUrl.trim()) {
-          setHeroImage(first.imageDataUrl.trim());
-          return;
-        }
-      } catch {
-        // ignore and fall back
-      }
-    }
-
-    const stored = localStorage.getItem("site_hero_image_v1");
-    if (stored && stored.trim()) {
-      setHeroImage(stored.trim());
-    }
-  }, []);
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-20">
       <SiteHeader />
-      {/* Page Banner */}
-      <div className="relative py-16 md:py-24 overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${heroImage})` }}
-        />
-        <div className="absolute inset-0 bg-foreground/75" />
-        <div className="container relative z-10 flex flex-col md:flex-row justify-between md:items-end gap-6">
+      <div className="section-dark py-16 md:py-20">
+        <div className="container flex flex-col md:flex-row justify-between md:items-end gap-6">
           <div>
-            <p className="text-primary font-medium uppercase tracking-wider text-sm mb-2">
-              {breadcrumb || "Home"}
+            <p className="text-section-dark-foreground/50 font-medium uppercase tracking-wider text-sm mb-2 flex items-center gap-1 flex-wrap">
+              {(breadcrumb || "Home").split("/").map((seg, i, arr) => {
+                const label = seg.trim();
+                const path = breadcrumbPaths[label];
+                const isLast = i === arr.length - 1;
+                return (
+                  <span key={i} className="flex items-center gap-1">
+                    {i > 0 && <span className="opacity-50">/</span>}
+                    {path && !isLast ? (
+                      <Link to={path} className="hover:opacity-75 transition-opacity">{label}</Link>
+                    ) : (
+                      <span className={isLast ? "opacity-75" : ""}>{label}</span>
+                    )}
+                  </span>
+                );
+              })}
             </p>
             <h1 className="font-heading text-3xl md:text-5xl font-bold text-primary-foreground">
               {title}

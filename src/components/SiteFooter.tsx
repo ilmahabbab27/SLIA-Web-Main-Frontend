@@ -24,20 +24,19 @@ const SiteFooter = () => {
     <footer className="section-dark pt-16 pb-8">
       <div className="container">
         <div className="grid md:grid-cols-4 gap-10 mb-12">
-          {/* Logo & info */}
           <ScrollReveal variant="fadeUp" className="md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.3 }}
                 className="flex items-center justify-center p-1 bg-white/90 rounded-sm"
+                style={{ position: "relative" }}
               >
                 <img src="/images/logo.png" alt="SLIA Logo" className="h-10 w-auto object-contain" />
               </motion.div>
             </div>
             <p className="text-section-dark-foreground/60 text-sm leading-relaxed">
-              Sri Lanka Institute of Architects — one of the foremost professional organisations in
-              Sri Lanka and the Asian region.
+              Sri Lanka Institute of Architects - one of the foremost professional organisations in Sri Lanka and the Asian region.
             </p>
             <p className="mt-4 text-section-dark-foreground/60 text-sm leading-relaxed">
               Sri Lanka Institute of Architects
@@ -61,7 +60,6 @@ const SiteFooter = () => {
             </div>
           </ScrollReveal>
 
-          {/* Quick Links */}
           <ScrollReveal variant="fadeUp" delay={0.1}>
             <h4 className="font-heading text-base font-semibold text-section-dark-foreground mb-4">Quick Links</h4>
             <ul className="space-y-2">
@@ -75,7 +73,6 @@ const SiteFooter = () => {
             </ul>
           </ScrollReveal>
 
-          {/* Resources */}
           <ScrollReveal variant="fadeUp" delay={0.2}>
             <h4 className="font-heading text-base font-semibold text-section-dark-foreground mb-4">Resources</h4>
             <ul className="space-y-2">
@@ -89,7 +86,6 @@ const SiteFooter = () => {
             </ul>
           </ScrollReveal>
 
-          {/* Contact */}
           <ScrollReveal variant="fadeUp" delay={0.3}>
             <h4 className="font-heading text-base font-semibold text-section-dark-foreground mb-4">Contact Us</h4>
             <div className="space-y-3">
@@ -117,7 +113,7 @@ const SiteFooter = () => {
           className="border-t border-section-dark-foreground/10 pt-6 text-center origin-left"
         >
           <p className="text-section-dark-foreground/40 text-xs">
-            © {new Date().getFullYear()} Sri Lanka Institute of Architects. All rights reserved.
+            (c) {new Date().getFullYear()} Sri Lanka Institute of Architects. All rights reserved.
           </p>
         </motion.div>
       </div>

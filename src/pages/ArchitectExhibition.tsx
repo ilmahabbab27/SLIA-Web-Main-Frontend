@@ -27,14 +27,6 @@ const ArchitectExhibition = () => (
             />
           </div>
         </div>
-
-        <div className="grid md:grid-cols-4 gap-6">
-          {["/images/event-1.jpg", "/images/event-2.jpg", "/images/event-3.jpg", "/images/event-4.jpg"].map((img, i) => (
-            <div key={i} className="overflow-hidden rounded-sm">
-              <img src={img} alt={`Exhibition ${i + 1}`} className="w-full h-48 object-cover hover:scale-105 transition-transform duration-500" />
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   </PageLayout>
