@@ -19,6 +19,13 @@ const resourceLinks = [
   { name: "Contact Us", path: "/contact" },
 ];
 
+const socialLinks = [
+  { name: "Facebook", href: "https://www.facebook.com/SLIAArchitectsMedia/", icon: Facebook },
+  { name: "Instagram", href: "https://www.instagram.com/srilankainstituteofarchitects/?hl=en", icon: Instagram },
+  { name: "YouTube", href: "https://www.youtube.com/channel/UCv7i7wluqV3mi9UUUMoQHdw", icon: Youtube },
+  { name: "LinkedIn", href: "https://www.linkedin.com/company/sri-lanka-institute-of-architects-slia", icon: Linkedin },
+];
+
 const SiteFooter = () => {
   return (
     <footer className="section-dark pt-16 pb-8">
@@ -45,14 +52,17 @@ const SiteFooter = () => {
               <br />
               www.slia.lk
             </p>
-            <div className="flex gap-3 mt-4">
-              {[Facebook, Instagram, Youtube, Linkedin].map((Icon, i) => (
+            <div className="flex flex-wrap gap-3 mt-4">
+              {socialLinks.map(({ name, href, icon: Icon }) => (
                 <motion.a
-                  key={i}
-                  href="#"
+                  key={name}
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
                   whileHover={{ scale: 1.2, y: -2 }}
                   whileTap={{ scale: 0.9 }}
                   className="text-section-dark-foreground/40 hover:text-primary transition-colors"
+                  aria-label={name}
                 >
                   <Icon className="w-5 h-5" />
                 </motion.a>

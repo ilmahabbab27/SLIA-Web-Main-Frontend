@@ -38,6 +38,8 @@ const navItems = [
         name: "Board of Architectural Education",
         path: "/bae",
         children: [
+          { name: "Student Members", path: "/bae/student-members" },
+          { name: "Graduate Members", path: "/bae/graduate-members" },
           {
             name: "Documents",
             path: "/bae#bae-documents",
@@ -207,6 +209,7 @@ const SiteHeader = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [memberLabel, setMemberLabel] = useState("Member Portal");
   const location = useLocation();
 
   useEffect(() => {
@@ -217,6 +220,25 @@ const SiteHeader = () => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const syncMemberLabel = () => {
+      try {
+        const raw = window.localStorage.getItem("slia_member_session");
+        setMemberLabel(raw ? "My Profile" : "Member Portal");
+      } catch {
+        setMemberLabel("Member Portal");
+      }
+    };
+
+    syncMemberLabel();
+    window.addEventListener("storage", syncMemberLabel);
+    window.addEventListener("focus", syncMemberLabel);
+    return () => {
+      window.removeEventListener("storage", syncMemberLabel);
+      window.removeEventListener("focus", syncMemberLabel);
+    };
   }, []);
 
   const isHomePage = location.pathname === "/";
@@ -235,10 +257,10 @@ const SiteHeader = () => {
           <div className="flex items-center gap-2">
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="-my-3 flex h-[104px] w-[104px] shrink-0 items-center justify-center sm:-my-4 sm:h-[116px] sm:w-[116px]"
+              className="-my-2 flex h-[72px] w-[72px] shrink-0 items-center justify-center sm:-my-4 sm:h-[116px] sm:w-[116px]"
               style={{ position: "relative" }}
             >
-              <img src="/images/logo.png" alt="SLIA Logo" className="h-[118%] w-[118%] max-w-none object-contain" />
+              <img src="/images/logo.png" alt="SLIA Logo" className="h-full w-full max-w-none object-contain sm:h-[118%] sm:w-[118%]" />
             </motion.div>
           </div>
         </Link>
@@ -296,18 +318,18 @@ const SiteHeader = () => {
         <div className="flex min-w-0 items-center gap-2">
           <Link
             to="/member-portal"
-            className="hidden px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-foreground hover:bg-muted transition-all border border-border sm:inline-flex"
+            className="hidden px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-foreground transition-all hover:bg-muted border border-border sm:inline-flex sm:px-6 sm:py-2.5 sm:text-xs"
           >
-            Member Portal
+            {memberLabel}
           </Link>
           <Link
             to="/find-an-architect"
-            className="shrink-0 px-2.5 py-2 text-[10px] font-bold uppercase tracking-wide bg-primary text-primary-foreground hover:bg-primary/90 transition-all sm:px-6 sm:py-2.5 sm:text-xs sm:tracking-widest"
+            className="shrink-0 px-2 py-2 text-[9px] font-bold uppercase tracking-wide bg-primary text-primary-foreground transition-all hover:bg-primary/90 sm:px-6 sm:py-2.5 sm:text-xs sm:tracking-widest"
           >
             Find an Architect
           </Link>
 
-          <button className="lg:hidden text-foreground p-1.5" onClick={() => setMobileOpen(!mobileOpen)}>
+          <button className="lg:hidden p-1 text-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
             <AnimatePresence mode="wait">
               <motion.span
                 key={mobileOpen ? "close" : "menu"}
@@ -316,7 +338,7 @@ const SiteHeader = () => {
                 exit={{ rotate: 90, opacity: 0 }}
                 transition={{ duration: 0.15 }}
               >
-                {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </motion.span>
             </AnimatePresence>
           </button>
@@ -342,9 +364,9 @@ const SiteHeader = () => {
               transition={{ duration: 0.28, ease: "easeOut" }}
               className="fixed right-0 top-0 z-[90] h-screen w-[86vw] max-w-sm overflow-y-auto border-l border-border bg-background shadow-2xl lg:hidden"
             >
-              <div className="flex items-center justify-between border-b border-border p-5">
+              <div className="flex items-center justify-between border-b border-border p-4">
                 <Link to="/" className="flex items-center gap-3" onClick={() => setMobileOpen(false)}>
-                  <img src="/images/logo.png" alt="SLIA Logo" className="h-12 w-auto object-contain" />
+                  <img src="/images/logo.png" alt="SLIA Logo" className="h-10 w-auto object-contain" />
                 </Link>
                 <button
                   type="button"
@@ -356,14 +378,14 @@ const SiteHeader = () => {
                 </button>
               </div>
 
-              <div className="p-5 space-y-4">
+              <div className="space-y-4 p-4">
               <div className="flex flex-col gap-2 pb-4 border-b border-border">
                 <Link
                   to="/member-portal"
                   className="flex items-center justify-center py-3 text-sm font-bold uppercase tracking-widest text-foreground border border-border"
                   onClick={() => setMobileOpen(false)}
                 >
-                  Member Portal
+                  {memberLabel}
                 </Link>
                 <Link
                   to="/find-an-architect"

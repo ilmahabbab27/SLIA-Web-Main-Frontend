@@ -1,61 +1,79 @@
 import { useEffect, useMemo, useState } from "react";
-import { GraduationCap, Loader2, Search } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Loader2, Search, UserRound } from "lucide-react";
 import PageLayout from "@/components/PageLayout";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { baeMemberApi, type BaeMemberItem } from "@/lib/api";
 
 const BaeGraduateMembers = () => {
   const [members, setMembers] = useState<BaeMemberItem[]>([]);
   const [search, setSearch] = useState("");
+  const [year, setYear] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [selectedMember, setSelectedMember] = useState<BaeMemberItem | null>(null);
 
   useEffect(() => {
-    baeMemberApi
-      .list("graduate")
-      .then(setMembers)
-      .finally(() => setLoading(false));
+    baeMemberApi.list("graduate").then(setMembers).finally(() => setLoading(false));
   }, []);
+
+  const years = useMemo(
+    () => Array.from(new Set(members.map((member) => member.membership_year).filter(Boolean))).sort((a, b) => String(b).localeCompare(String(a))),
+    [members],
+  );
 
   const filteredMembers = useMemo(() => {
     const needle = search.trim().toLowerCase();
-    return members.filter((member) =>
-      !needle ||
-      [member.name, member.membership_number, member.academic_qualifications, member.email]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(needle))
-    );
-  }, [members, search]);
+    return members.filter((member) => {
+      const matchesYear = year === "all" || member.membership_year === year;
+      const matchesSearch =
+        !needle ||
+        [member.name, member.membership_number, member.academic_qualifications, member.email, member.contact_no]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(needle));
+
+      return matchesYear && matchesSearch;
+    });
+  }, [members, search, year]);
 
   return (
     <PageLayout title="Graduate Members" subtitle="Board of Architectural Education" breadcrumb="Boards / BAE / Graduate Members">
       <section className="py-16">
         <div className="mx-auto w-full max-w-7xl space-y-8 px-3 sm:px-4 lg:px-6">
-          <div className="border border-border bg-card p-6 shadow-sm sm:p-8 md:p-10">
-            <div className="mb-6 flex h-16 w-16 items-center justify-center bg-primary/10 text-primary">
-              <GraduationCap className="h-8 w-8" />
-            </div>
-            <p className="text-sm font-semibold uppercase tracking-widest text-primary">Members</p>
-            <h2 className="mt-2 font-heading text-3xl font-bold text-foreground md:text-4xl">Graduate Members</h2>
-            <p className="mt-5 max-w-3xl text-lg leading-relaxed text-foreground/75">
-              Browse graduate members of the Board of Architectural Education.
-            </p>
-            <div className="mt-8">
-              <Link to="/bae" className="text-sm font-semibold text-primary hover:underline">
-                Back to Board of Architectural Education
-              </Link>
-            </div>
-          </div>
-
-          <div className="border border-border bg-card p-4 shadow-sm sm:p-5">
-            <div className="max-w-md">
+          <div className="grid gap-4 border border-border bg-card p-4 shadow-sm sm:p-5 md:grid-cols-[minmax(0,1fr)_220px]">
+            <div>
               <label htmlFor="graduate-member-search" className="text-sm text-foreground/70">
                 Search
               </label>
               <div className="relative mt-2">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
-                <Input id="graduate-member-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search graduate members" className="pl-9" />
+                <Input
+                  id="graduate-member-search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search graduate members"
+                  className="pl-9"
+                />
               </div>
+            </div>
+            <div>
+              <label className="text-sm text-foreground/70">Year</label>
+              <Select value={year} onValueChange={setYear}>
+                <SelectTrigger className="mt-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Years</SelectItem>
+                  {years.map((item) => (
+                    <SelectItem key={item} value={String(item)}>
+                      {item}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -73,14 +91,13 @@ const BaeGraduateMembers = () => {
 
           {!loading && filteredMembers.length > 0 && (
             <div className="overflow-x-auto border border-border bg-card">
-              <table className="w-full min-w-[900px] text-left text-sm">
+              <table className="w-full min-w-[980px] text-left text-sm">
                 <thead className="bg-muted text-xs uppercase tracking-widest text-foreground/60">
                   <tr>
-                    <th className="px-4 py-3">No</th>
-                    <th className="px-4 py-3">Name</th>
+                    <th className="px-4 py-3">Member</th>
+                    <th className="px-4 py-3">Membership No</th>
                     <th className="px-4 py-3">Qualifications</th>
                     <th className="px-4 py-3">Year</th>
-                    <th className="px-4 py-3">Membership No</th>
                     <th className="px-4 py-3">Contact</th>
                     <th className="px-4 py-3">Email</th>
                   </tr>
@@ -88,13 +105,29 @@ const BaeGraduateMembers = () => {
                 <tbody>
                   {filteredMembers.map((member) => (
                     <tr key={member.id} className="border-t border-border">
-                      <td className="px-4 py-3">{member.serial_no}</td>
-                      <td className="px-4 py-3 font-semibold text-foreground">{member.name}</td>
-                      <td className="px-4 py-3 text-foreground/70">{member.academic_qualifications}</td>
-                      <td className="px-4 py-3">{member.membership_year}</td>
-                      <td className="px-4 py-3">{member.membership_number}</td>
-                      <td className="px-4 py-3">{member.contact_no}</td>
-                      <td className="px-4 py-3">{member.email}</td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-muted">
+                            {member.photo ? <img src={member.photo} alt={member.name} className="h-full w-full object-cover" /> : <UserRound className="h-5 w-5 text-foreground/40" />}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-foreground">{member.name}</p>
+                            <p className="text-xs text-foreground/60">{member.name_with_initials || member.yearbook_name || "-"}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 font-semibold">{member.membership_number}</td>
+                      <td className="px-4 py-4 text-foreground/70">{member.academic_qualifications || "-"}</td>
+                      <td className="px-4 py-4">{member.membership_year || "-"}</td>
+                      <td className="px-4 py-4">{member.contact_no || "-"}</td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <span>{member.email || "-"}</span>
+                          <Button type="button" variant="ghost" size="sm" onClick={() => setSelectedMember(member)} className="text-primary hover:bg-primary/10">
+                            See More
+                          </Button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -103,6 +136,61 @@ const BaeGraduateMembers = () => {
           )}
         </div>
       </section>
+
+      <Dialog open={Boolean(selectedMember)} onOpenChange={(open) => !open && setSelectedMember(null)}>
+        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto border-border bg-background p-0">
+          {selectedMember && (
+            <div>
+              <div className="border-b border-border bg-gradient-to-br from-primary/10 via-background to-background p-6 sm:p-8">
+                <div className="flex flex-col gap-6 sm:flex-row sm:items-end">
+                  <Avatar className="h-40 w-40 rounded-3xl border-4 border-background bg-muted shadow-lg">
+                    <AvatarImage src={selectedMember.photo || ""} alt={selectedMember.name} />
+                    <AvatarFallback className="rounded-3xl bg-primary/10 text-3xl text-primary">
+                      {selectedMember.name?.charAt(0) || <UserRound className="h-12 w-12" />}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <DialogHeader className="text-left">
+                      <DialogTitle className="text-2xl">{selectedMember.name}</DialogTitle>
+                      <DialogDescription className="text-sm text-foreground/70">
+                        {selectedMember.name_with_initials || selectedMember.yearbook_name || "Graduate Member"}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Badge variant="secondary">Graduate Member</Badge>
+                      {selectedMember.membership_number && <Badge variant="outline">{selectedMember.membership_number}</Badge>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-2">
+                <section className="space-y-3">
+                  <h4 className="text-sm font-semibold uppercase tracking-widest text-foreground/50">Core Details</h4>
+                  <div className="grid gap-3 rounded-2xl border border-border bg-muted/20 p-4 text-sm">
+                    <p><span className="font-medium text-foreground">Membership No:</span> {selectedMember.membership_number || "-"}</p>
+                    <p><span className="font-medium text-foreground">Year:</span> {selectedMember.membership_year || "-"}</p>
+                    <p><span className="font-medium text-foreground">Qualifications:</span> {selectedMember.academic_qualifications || "-"}</p>
+                    <p><span className="font-medium text-foreground">Contact:</span> {selectedMember.contact_no || "-"}</p>
+                    <p><span className="font-medium text-foreground">Email:</span> {selectedMember.email || "-"}</p>
+                  </div>
+                </section>
+
+                <section className="space-y-3">
+                  <h4 className="text-sm font-semibold uppercase tracking-widest text-foreground/50">Full Record</h4>
+                  <div className="grid gap-3 rounded-2xl border border-border bg-muted/20 p-4 text-sm">
+                    <p><span className="font-medium text-foreground">Serial:</span> {selectedMember.serial_no || "-"}</p>
+                    <p><span className="font-medium text-foreground">Membership Number:</span> {selectedMember.membership_number || "-"}</p>
+                    <p><span className="font-medium text-foreground">Name:</span> {selectedMember.name || "-"}</p>
+                    <p><span className="font-medium text-foreground">Yearbook:</span> {selectedMember.yearbook_name || "-"}</p>
+                    <p><span className="font-medium text-foreground">Address:</span> {selectedMember.address || "-"}</p>
+                  </div>
+                </section>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </PageLayout>
   );
 };

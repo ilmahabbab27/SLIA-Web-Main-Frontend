@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import SliaManager from "@/pages/admin/SliaManager";
 
 const documentCategories: Array<{ value: BaeDocumentCategory; label: string }> = [
   { value: "applications", label: "Applications" },
@@ -78,7 +79,9 @@ const fileToDataUrl = (file: File): Promise<string> =>
     reader.readAsDataURL(file);
   });
 
-type MemberForm = Omit<BaeMemberItem, "id" | "created_at" | "updated_at"> & { id?: number };
+type MemberForm = Omit<BaeMemberItem, "id" | "created_at" | "updated_at"> & {
+  id?: number;
+};
 
 const memberTypeOptions: Array<{ value: BaeMemberType; label: string }> = [
   { value: "student", label: "Student" },
@@ -500,36 +503,11 @@ const BaeMemberManager = ({ memberType }: { memberType?: BaeMemberType }) => {
           >
             <PanelLeftClose className="h-5 w-5" />
           </button>
-        </div>
-
-        <div className="mb-6 space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-bold text-white">Upload Excel Sheet</p>
-              <p className="mt-1 text-xs text-slate-500">
-                {isAllMembers
-                  ? "Import a workbook with sheet names containing Student, Graduate, or Associate."
-                  : `Import ${title.toLowerCase()} using the standard year book columns.`}
-              </p>
-            </div>
-            {importing && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
-          </div>
-          <label className="relative flex h-11 cursor-pointer items-center justify-center gap-2 bg-primary px-4 text-sm font-bold text-white">
-            <Upload className="h-4 w-4" />
-            Choose .xlsx
-            <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={handleExcelImport} className="absolute inset-0 cursor-pointer opacity-0" />
-          </label>
-          <div className="flex items-center gap-3">
-            <Switch checked={replaceImport} onCheckedChange={setReplaceImport} />
-            <Label className="text-xs text-slate-400">Replace existing {title.toLowerCase()} on import</Label>
-          </div>
-        </div>
-
-        <form onSubmit={saveMember} className="space-y-4">
+        </div>`n        <form onSubmit={saveMember} className="space-y-4">
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-            <p className="text-xs font-bold uppercase tracking-widest text-primary">Current Membership</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-primary">Personal Details</p>
             <p className="mt-1 text-xs text-slate-500">
-              These fields save to <span className="text-slate-300">member_type</span>, <span className="text-slate-300">membership_number</span>, and <span className="text-slate-300">membership_year</span>.
+              This section keeps the core member identity details.
             </p>
           </div>
 
@@ -587,71 +565,136 @@ const BaeMemberManager = ({ memberType }: { memberType?: BaeMemberType }) => {
           </div>
 
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-            <p className="text-xs font-bold uppercase tracking-widest text-primary">Reference Membership Numbers</p>
-            <p className="mt-1 text-xs text-slate-500">
-              These preserve previous or future numbers when a member moves between Student, Graduate, and Associate.
-            </p>
+            <p className="text-xs font-bold uppercase tracking-widest text-primary">Location</p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Student Member No</Label>
-              <Input value={form.student_membership_number || ""} onChange={(event) => setForm((current) => ({ ...current, student_membership_number: event.target.value, ...(currentNumberKey === "student_membership_number" ? { membership_number: event.target.value } : {}) }))} className="h-11 border-white/10 bg-white/5 text-white" />
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">District</Label>
+              <Input value={form.location_district || ""} onChange={(event) => setForm((current) => ({ ...current, location_district: event.target.value }))} className="h-11 border-white/10 bg-white/5 text-white" />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Graduate Member No</Label>
-              <Input value={form.graduate_membership_number || ""} onChange={(event) => setForm((current) => ({ ...current, graduate_membership_number: event.target.value, ...(currentNumberKey === "graduate_membership_number" ? { membership_number: event.target.value } : {}) }))} className="h-11 border-white/10 bg-white/5 text-white" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Associate Member No</Label>
-              <Input value={form.associate_membership_number || ""} onChange={(event) => setForm((current) => ({ ...current, associate_membership_number: event.target.value, ...(currentNumberKey === "associate_membership_number" ? { membership_number: event.target.value } : {}) }))} className="h-11 border-white/10 bg-white/5 text-white" />
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Province</Label>
+              <Input value={form.location_province || ""} onChange={(event) => setForm((current) => ({ ...current, location_province: event.target.value }))} className="h-11 border-white/10 bg-white/5 text-white" />
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+            <p className="text-xs font-bold uppercase tracking-widest text-primary">Office Contact</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Office Address</Label>
+            <Textarea value={form.office_address || ""} onChange={(event) => setForm((current) => ({ ...current, office_address: event.target.value }))} className="min-h-16 border-white/10 bg-white/5 text-white" />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Student Year</Label>
-              <Input value={form.student_membership_year || ""} onChange={(event) => setForm((current) => ({ ...current, student_membership_year: event.target.value, ...(currentYearKey === "student_membership_year" ? { membership_year: event.target.value } : {}) }))} className="h-11 border-white/10 bg-white/5 text-white" />
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Office District</Label>
+              <Input value={form.office_district || ""} onChange={(event) => setForm((current) => ({ ...current, office_district: event.target.value }))} className="h-11 border-white/10 bg-white/5 text-white" />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Graduate Year</Label>
-              <Input value={form.graduate_membership_year || ""} onChange={(event) => setForm((current) => ({ ...current, graduate_membership_year: event.target.value, ...(currentYearKey === "graduate_membership_year" ? { membership_year: event.target.value } : {}) }))} className="h-11 border-white/10 bg-white/5 text-white" />
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Office Province</Label>
+              <Input value={form.office_province || ""} onChange={(event) => setForm((current) => ({ ...current, office_province: event.target.value }))} className="h-11 border-white/10 bg-white/5 text-white" />
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Office Phone</Label>
+              <Input value={form.office_phone || ""} onChange={(event) => setForm((current) => ({ ...current, office_phone: event.target.value }))} className="h-11 border-white/10 bg-white/5 text-white" />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Associate Year</Label>
-              <Input value={form.associate_membership_year || ""} onChange={(event) => setForm((current) => ({ ...current, associate_membership_year: event.target.value, ...(currentYearKey === "associate_membership_year" ? { membership_year: event.target.value } : {}) }))} className="h-11 border-white/10 bg-white/5 text-white" />
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Office Email</Label>
+              <Input type="email" value={form.office_email || ""} onChange={(event) => setForm((current) => ({ ...current, office_email: event.target.value }))} className="h-11 border-white/10 bg-white/5 text-white" />
             </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Office Fax</Label>
+              <Input value={form.office_fax || ""} onChange={(event) => setForm((current) => ({ ...current, office_fax: event.target.value }))} className="h-11 border-white/10 bg-white/5 text-white" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Office Website</Label>
+              <Input value={form.office_website || ""} onChange={(event) => setForm((current) => ({ ...current, office_website: event.target.value }))} className="h-11 border-white/10 bg-white/5 text-white" />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+            <p className="text-xs font-bold uppercase tracking-widest text-primary">Home Contact</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Home Address</Label>
+            <Textarea value={form.home_address || ""} onChange={(event) => setForm((current) => ({ ...current, home_address: event.target.value }))} className="min-h-16 border-white/10 bg-white/5 text-white" />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Home District</Label>
+              <Input value={form.home_district || ""} onChange={(event) => setForm((current) => ({ ...current, home_district: event.target.value }))} className="h-11 border-white/10 bg-white/5 text-white" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Home Province</Label>
+              <Input value={form.home_province || ""} onChange={(event) => setForm((current) => ({ ...current, home_province: event.target.value }))} className="h-11 border-white/10 bg-white/5 text-white" />
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Home Phone</Label>
+              <Input value={form.home_phone || ""} onChange={(event) => setForm((current) => ({ ...current, home_phone: event.target.value }))} className="h-11 border-white/10 bg-white/5 text-white" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Home Fax</Label>
+              <Input value={form.home_fax || ""} onChange={(event) => setForm((current) => ({ ...current, home_fax: event.target.value }))} className="h-11 border-white/10 bg-white/5 text-white" />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Home Email</Label>
+            <Input type="email" value={form.home_email || ""} onChange={(event) => setForm((current) => ({ ...current, home_email: event.target.value }))} className="h-11 border-white/10 bg-white/5 text-white" />
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+            <p className="text-xs font-bold uppercase tracking-widest text-primary">Contact Info 1</p>
           </div>
 
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Address</Label>
-            <Textarea value={form.address || ""} onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))} className="min-h-20 border-white/10 bg-white/5 text-white" />
+            <Textarea value={form.contact_info_1_address || ""} onChange={(event) => setForm((current) => ({ ...current, contact_info_1_address: event.target.value }))} className="min-h-16 border-white/10 bg-white/5 text-white" />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Phone</Label>
+              <Input value={form.contact_info_1_phone || ""} onChange={(event) => setForm((current) => ({ ...current, contact_info_1_phone: event.target.value }))} className="h-11 border-white/10 bg-white/5 text-white" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Email</Label>
+              <Input type="email" value={form.contact_info_1_email || ""} onChange={(event) => setForm((current) => ({ ...current, contact_info_1_email: event.target.value }))} className="h-11 border-white/10 bg-white/5 text-white" />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+            <p className="text-xs font-bold uppercase tracking-widest text-primary">Contact Info 2</p>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Remarks</Label>
-            <Textarea value={form.remarks || ""} onChange={(event) => setForm((current) => ({ ...current, remarks: event.target.value }))} className="min-h-16 border-white/10 bg-white/5 text-white" />
+            <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Address</Label>
+            <Textarea value={form.contact_info_2_address || ""} onChange={(event) => setForm((current) => ({ ...current, contact_info_2_address: event.target.value }))} className="min-h-16 border-white/10 bg-white/5 text-white" />
           </div>
 
-          <div className="flex items-center gap-3">
-            <Switch checked={form.is_active} onCheckedChange={(value) => setForm((current) => ({ ...current, is_active: value }))} />
-            <Label className="text-sm text-slate-400">Publicly visible</Label>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Current Membership Status</Label>
-            <Select value={form.current_membership_status || "active"} onValueChange={(value) => setForm((current) => ({ ...current, current_membership_status: value as any }))}>
-              <SelectTrigger className="h-11 border-white/10 bg-white/5 text-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="border-white/10 bg-[#1a1a1a]">
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Phone</Label>
+              <Input value={form.contact_info_2_phone || ""} onChange={(event) => setForm((current) => ({ ...current, contact_info_2_phone: event.target.value }))} className="h-11 border-white/10 bg-white/5 text-white" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Email</Label>
+              <Input type="email" value={form.contact_info_2_email || ""} onChange={(event) => setForm((current) => ({ ...current, contact_info_2_email: event.target.value }))} className="h-11 border-white/10 bg-white/5 text-white" />
+            </div>
           </div>
 
           <Button type="submit" disabled={saving} className="h-12 w-full bg-primary font-bold text-white">
@@ -772,90 +815,44 @@ const BaeMemberManager = ({ memberType }: { memberType?: BaeMemberType }) => {
               </div>
             </div>
           )}
-          <div className="overflow-x-auto border border-white/5 bg-[#0a0a0a]">
-            <table className="w-full min-w-[1080px] text-left text-sm">
-              <thead className="border-b border-white/5 bg-white/[0.03] text-xs uppercase tracking-[0.18em] text-slate-500">
+          <div className="overflow-x-auto rounded-lg border border-white/10 bg-[#0a0a0a]">
+            <table className="w-full min-w-[980px] text-left text-sm">
+              <thead className="bg-white/[0.03] text-xs uppercase tracking-[0.18em] text-slate-500">
                 <tr>
-                  {isAllMembers && (
-                    <th className="px-4 py-4">
-                      <input type="checkbox" checked={allVisibleSelected} onChange={toggleAllVisible} className="h-4 w-4 accent-primary" />
-                    </th>
-                  )}
-                  <th className="px-4 py-4">No</th>
-                  {isAllMembers && <th className="px-4 py-4">Type</th>}
-                  <th className="px-4 py-4">Current Type</th>
-                  <th className="px-4 py-4">Name</th>
-                  <th className="px-4 py-4">Qualifications</th>
-                  <th className="px-4 py-4">Year</th>
-                  <th className="px-4 py-4">Student Member No</th>
-                  <th className="px-4 py-4">Graduate Member No</th>
-                  <th className="px-4 py-4">Associate Member No</th>
+                  <th className="px-4 py-4">Personal Details</th>
                   <th className="px-4 py-4">Contact</th>
-                  <th className="px-4 py-4">Email</th>
-                  <th className="px-4 py-4">Status</th>
+                  <th className="px-4 py-4">Username</th>
+                  <th className="px-4 py-4">Password</th>
                   <th className="px-4 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredMembers.map((member) => (
-                  <tr key={member.id || member.membership_number || member.name} className="border-b border-white/5 last:border-b-0">
-                    {isAllMembers && (
-                      <td className="px-4 py-4">
-                        <input type="checkbox" checked={Boolean(member.id && selectedIds.includes(member.id))} onChange={() => toggleSelected(member.id)} className="h-4 w-4 accent-primary" />
-                      </td>
-                    )}
-                    <td className="px-4 py-4 font-bold text-primary">{member.serial_no || "-"}</td>
-                    {isAllMembers && (
-                      <td className="px-4 py-4">
-                        <span className="text-xs font-bold uppercase tracking-widest text-slate-400">{member.member_type}</span>
-                      </td>
-                    )}
-                    <td className="px-4 py-4">
-                      <span className="text-xs font-bold uppercase tracking-widest text-primary">{member.current_membership_type || member.member_type}</span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <p className="max-w-[220px] font-semibold text-white">{member.name}</p>
-                      {member.address && <p className="mt-1 max-w-[260px] truncate text-xs text-slate-600">{member.address}</p>}
-                    </td>
-                    <td className="px-4 py-4 max-w-[220px] text-slate-400">{member.academic_qualifications || "-"}</td>
-                    <td className="px-4 py-4 text-slate-400">{member.membership_year || "-"}</td>
-                    <td className="px-4 py-4 text-xs text-slate-500">
-                      <div className="font-semibold text-slate-300">{member.student_membership_number || "-"}</div>
-                      {member.student_membership_year && <div>{member.student_membership_year}</div>}
-                    </td>
-                    <td className="px-4 py-4 text-xs text-slate-500">
-                      <div className="font-semibold text-slate-300">{member.graduate_membership_number || "-"}</div>
-                      {member.graduate_membership_year && <div>{member.graduate_membership_year}</div>}
-                    </td>
-                    <td className="px-4 py-4 text-xs text-slate-500">
-                      <div className="font-semibold text-slate-300">{member.associate_membership_number || "-"}</div>
-                      {member.associate_membership_year && <div>{member.associate_membership_year}</div>}
-                    </td>
-                    <td className="px-4 py-4 text-slate-400">{member.contact_no || "-"}</td>
-                    <td className="px-4 py-4 max-w-[220px] truncate text-slate-400">{member.email || "-"}</td>
-                    <td className="px-4 py-4">
+                  <tr key={member.id || member.membership_number || member.name} className="border-t border-white/10 bg-white/[0.02] transition hover:bg-white/[0.05]">
+                    <td className="px-4 py-4 align-top">
                       <div className="space-y-1">
-                        <span className={member.is_active ? "block text-xs font-bold text-emerald-400" : "block text-xs font-bold text-red-500/70"}>
-                          {member.is_active ? "Visible" : "Hidden"}
-                        </span>
-                        <span className={`block text-xs font-semibold capitalize ${
-                          member.current_membership_status === "active" ? "text-blue-400" :
-                          member.current_membership_status === "inactive" ? "text-yellow-400" :
-                          member.current_membership_status === "expired" ? "text-orange-400" :
-                          member.current_membership_status === "suspended" ? "text-red-400" :
-                          member.current_membership_status === "cancelled" ? "text-slate-500" :
-                          "text-slate-400"
-                        }`}>
-                          {member.current_membership_status || "active"}
-                        </span>
+                        <p className="font-semibold text-white">{member.name || "-"}</p>
+                        <p className="text-xs text-slate-400">{member.name_with_initials || "-"}</p>
+                        <p className="text-xs text-slate-500">
+                          {[member.membership_type, member.membership_number, member.membership_year].filter(Boolean).join(" | ") || "-"}
+                        </p>
                       </div>
                     </td>
-                    <td className="px-4 py-4">
-                      <div className="flex justify-end gap-1">
-                        <button type="button" onClick={() => setForm(member)} className="p-2 text-slate-500 transition-colors hover:bg-white/5 hover:text-white">
+                    <td className="px-4 py-4 align-top text-slate-400">
+                      <div className="space-y-1">
+                        <p>{member.email || "-"}</p>
+                        <p>{member.contact_no || "-"}</p>
+                        <p className="text-xs text-slate-500">{member.address || "-"}</p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 align-top text-white">{member.username || "-"}</td>
+                    <td className="px-4 py-4 align-top text-white">{member.password || "-"}</td>
+                    <td className="px-4 py-4 align-top">
+                      <div className="flex justify-end gap-2">
+                        <button type="button" onClick={() => setForm(member)} className="rounded p-2 text-slate-400 transition hover:bg-white/10 hover:text-white">
                           <Pencil size={14} />
                         </button>
-                        <button type="button" onClick={() => deleteMember(member)} disabled={deletingId === member.id} className="p-2 text-slate-500 transition-colors hover:bg-red-500/10 hover:text-red-500 disabled:opacity-40">
+                        <button type="button" onClick={() => deleteMember(member)} disabled={deletingId === member.id} className="rounded p-2 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40">
                           {deletingId === member.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                         </button>
                       </div>
@@ -1190,7 +1187,7 @@ const BaeManager = () => {
         </TabsContent>
 
         <TabsContent value="all-members" className="mt-0">
-          <BaeMemberManager />
+          <SliaManager hideExtendedSections />
         </TabsContent>
 
         <TabsContent value="intro" className="mt-0">
@@ -1244,3 +1241,5 @@ const BaeManager = () => {
 };
 
 export default BaeManager;
+
+

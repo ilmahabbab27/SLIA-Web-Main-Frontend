@@ -26,12 +26,12 @@ interface PageLayoutProps {
 
 const PageLayout = ({ children, title, subtitle, breadcrumb, action }: PageLayoutProps) => {
   return (
-    <div className="min-h-screen bg-background pt-20">
+    <div className="min-h-screen bg-background pt-40 sm:pt-28">
       <SiteHeader />
-      <div className="section-dark py-16 md:py-20">
-        <div className="container flex flex-col md:flex-row justify-between md:items-end gap-6">
+      <div className="section-dark py-12 sm:py-14 md:py-20">
+        <div className="mx-auto w-full max-w-7xl px-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between sm:px-4 lg:px-6">
           <div>
-            <p className="text-section-dark-foreground/50 font-medium uppercase tracking-wider text-sm mb-2 flex items-center gap-1 flex-wrap">
+            <p className="mb-2 flex flex-wrap items-center gap-1 text-sm font-medium uppercase tracking-wider text-section-dark-foreground/50">
               {(breadcrumb || "Home").split("/").map((seg, i, arr) => {
                 const label = seg.trim();
                 const path = breadcrumbPaths[label];
@@ -48,11 +48,11 @@ const PageLayout = ({ children, title, subtitle, breadcrumb, action }: PageLayou
                 );
               })}
             </p>
-            <h1 className="font-heading text-3xl md:text-5xl font-bold text-primary-foreground">
+            <h1 className="font-heading text-2xl font-bold text-primary-foreground md:text-5xl">
               {title}
             </h1>
             {subtitle && (
-              <p className="text-primary-foreground/70 mt-3 text-lg max-w-2xl">{subtitle}</p>
+              <p className="mt-3 max-w-2xl text-base text-primary-foreground/70 sm:text-lg">{subtitle}</p>
             )}
           </div>
           {action && (

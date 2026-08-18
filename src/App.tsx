@@ -12,6 +12,7 @@ import AnnualAwards from "./pages/AnnualAwards";
 import ArchitectExhibition from "./pages/ArchitectExhibition";
 import DesignCompetition from "./pages/DesignCompetition";
 import FindAnArchitect from "./pages/FindAnArchitect";
+import MemberPortal from "./pages/MemberPortal";
 import ArchitectPractices from "./pages/ArchitectPractices";
 import WhyBeAnArchitect from "./pages/WhyBeAnArchitect";
 import LatestNews from "./pages/LatestNews";
@@ -30,12 +31,16 @@ import History from "./pages/History";
 import Council from "./pages/about/Council";
 import Objectives from "./pages/Objectives";
 import Contact from "./pages/Contact";
+import Complaints from "./pages/Complaints";
 import About from "./pages/about/About";
 import BoardOfTrustees from "./pages/about/BoardOfTrustees";
 import BoardOfManagementAbout from "./pages/about/BoardOfManagement";
 import BoardOfManagement from "./pages/boards/BoardOfManagement.tsx";
 import BoardOfArchitecturalEducationAbout from "./pages/about/BoardOfArchitecturalEducation";
 import BoardOfArchitecturalEducation from "./pages/boards/BoardOfArchitecturalEducation.tsx";
+import BaeStudentMembers from "./pages/boards/BaeStudentMembers";
+import BaeGraduateMembers from "./pages/boards/BaeGraduateMembers";
+import BaeAssociateMembers from "./pages/boards/BaeAssociateMembers";
 import ProfessionalAffairsBoard from "./pages/boards/ProfessionalAffairsBoard.tsx";
 import ProfessionalAffairsBoardAbout from "./pages/about/ProfessionalAffairsBoard";
 import BoardOfArchitecturalPublications, {
@@ -76,6 +81,7 @@ const AppRoutes = () => (
           <Route path="/architect-exhibition" element={<ArchitectExhibition />} />
           <Route path="/design-competition" element={<DesignCompetition />} />
           <Route path="/find-an-architect" element={<FindAnArchitect />} />
+          <Route path="/member-portal" element={<MemberPortal />} />
           <Route path="/architect-practices" element={<ArchitectPractices />} />
           <Route path="/why-be-an-architect" element={<WhyBeAnArchitect />} />
           <Route path="/latest-news" element={<LatestNews />} />
@@ -96,6 +102,7 @@ const AppRoutes = () => (
           <Route path="/council" element={<Council />} />
           <Route path="/objectives" element={<Objectives />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/complaints" element={<Complaints />} />
           <Route path="/about" element={<About />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route element={<RequireAdminAuth />}>
@@ -138,6 +145,9 @@ const AppRoutes = () => (
           <Route path="/trustees" element={<BoardOfTrustees />} />
           <Route path="/management" element={<BoardOfManagement />} />
           <Route path="/bae" element={<BoardOfArchitecturalEducation />} />
+          <Route path="/bae/student-members" element={<BaeStudentMembers />} />
+          <Route path="/bae/graduate-members" element={<BaeGraduateMembers />} />
+          <Route path="/bae/associate-members" element={<BaeAssociateMembers />} />
           <Route path="/pab" element={<ProfessionalAffairsBoard />} />
           <Route path="/bap" element={<BoardOfArchitecturalPublicationsBoards />} />
           <Route path="*" element={<NotFound />} />
