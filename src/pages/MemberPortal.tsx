@@ -75,9 +75,10 @@ const formatDisplayDate = (value?: string | null) => {
     return "";
   }
 
-  const parsed = new Date(value);
+  const normalized = value.includes("T") ? value.split("T")[0] : value;
+  const parsed = new Date(normalized);
   if (Number.isNaN(parsed.getTime())) {
-    return value;
+    return normalized;
   }
 
   return new Intl.DateTimeFormat("en-GB", {
@@ -85,6 +86,20 @@ const formatDisplayDate = (value?: string | null) => {
     month: "long",
     year: "numeric",
   }).format(parsed);
+};
+
+const normalizeDateInput = (value?: string | null) => {
+  if (!value || !value.trim()) {
+    return "";
+  }
+
+  const normalized = value.includes("T") ? value.split("T")[0] : value;
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) {
+    return normalized;
+  }
+
+  return parsed.toISOString().slice(0, 10);
 };
 
 const FieldView = ({ label, value, span, multiline }: FieldViewProps) => (
@@ -114,7 +129,9 @@ const MemberPortal = () => {
   const [activeMember, setActiveMember] = useState<Member | null>(null);
   const [form, setForm] = useState<Member>({});
   const [editMode, setEditMode] = useState(false);
+  const [profileTab, setProfileTab] = useState<"profile" | "practice" | "contacts" | "other-contact" | "awards">("profile");
   const editFormRef = useRef<HTMLDivElement | null>(null);
+  const resetPasswordRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(MEMBER_SESSION_KEY);
@@ -131,6 +148,12 @@ const MemberPortal = () => {
       window.requestAnimationFrame(() => {
         editFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
+    }
+  }, [editMode]);
+
+  useEffect(() => {
+    if (!editMode) {
+      setProfileTab("profile");
     }
   }, [editMode]);
 
@@ -712,20 +735,23 @@ const MemberPortal = () => {
                       >
                         {editMode ? "Stop Editing" : "Edit Profile"}
                       </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="h-10 w-full border-white/20 bg-white/5 px-3 text-sm text-white hover:bg-white/10 hover:text-white sm:w-auto sm:px-4"
-                      onClick={() => {
-                        setMode("reset");
-                        setMembershipNumber(portalUsername);
-                        setCurrentPassword("");
-                        setPassword("");
-                        setConfirmPassword("");
-                      }}
-                    >
-                      Update Password
-                    </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-10 w-full border-white/20 bg-white/5 px-3 text-sm text-white hover:bg-white/10 hover:text-white sm:w-auto sm:px-4"
+                        onClick={() => {
+                          setMode("reset");
+                          setMembershipNumber(portalUsername);
+                          setCurrentPassword("");
+                          setPassword("");
+                          setConfirmPassword("");
+                          window.requestAnimationFrame(() => {
+                            resetPasswordRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                          });
+                        }}
+                      >
+                        Update Password
+                      </Button>
                     <Button type="button" variant="outline" className="h-10 w-full border-white/20 bg-white/5 px-3 text-sm text-white hover:bg-white/10 hover:text-white sm:w-auto sm:px-4" onClick={logout}>
                       Logout
                     </Button>
@@ -768,12 +794,29 @@ const MemberPortal = () => {
                         A few fields are not editable. If you need to update them, please contact SLIA PAB at{" "}
                         <span className="font-semibold">managerpab@architects.lk</span> along with the necessary documents.
                       </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="mt-4 h-10 w-full border-emerald-300 bg-white text-emerald-800 hover:bg-emerald-100 hover:text-emerald-900"
+                        onClick={() => {
+                          setMode("reset");
+                          setMembershipNumber(portalUsername);
+                          setCurrentPassword("");
+                          setPassword("");
+                          setConfirmPassword("");
+                          window.requestAnimationFrame(() => {
+                            resetPasswordRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                          });
+                        }}
+                      >
+                        Update Password
+                      </Button>
                     </div>
                   </div>
 
                   <div className="grid gap-5 sm:gap-6">
                   {mode === "reset" && (
-                    <div className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-4 shadow-sm sm:p-5">
+                    <div ref={resetPasswordRef} className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-4 shadow-sm sm:p-5">
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Change Password</p>
@@ -815,8 +858,102 @@ const MemberPortal = () => {
                     </div>
                   )}
 
+                  {!editMode && (
+                    <div className="space-y-4 md:hidden">
+                      <div className="rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Profile Summary</p>
+                        <p className="mt-2 text-sm leading-6 text-slate-700 break-words">Use Edit Profile to update your details. Sections below are grouped for easier reading on mobile.</p>
+                      </div>
+
+                      <details className="rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-sm">
+                        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Personal Details</summary>
+                        <div className="mt-4 space-y-3">
+                          <FieldView label="Full Name *" value={form.full_name} />
+                          <FieldView label="Name With Initials" value={form.name_with_initials} />
+                          <FieldView label="Yearbook Name" value={form.yearbook_name} />
+                          <FieldView label="NIC Number" value={form.nic_number} />
+                          <FieldView label="Gender" value={form.gender} />
+                          <FieldView label="Date of Birth" value={form.date_of_birth} />
+                        </div>
+                      </details>
+
+                      <details className="rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-sm">
+                        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Membership &amp; Professional</summary>
+                        <div className="mt-4 space-y-3">
+                          <FieldView label="Membership Type" value={form.membership_type || "Student"} />
+                          <FieldView label="Membership Number" value={form.membership_number} />
+                          <FieldView label="Membership Year" value={form.membership_year} />
+                          <FieldView label="ARB Number" value={form.arb_number} />
+                          <FieldView label="Username" value={form.username} />
+                          <FieldView label="Password" value={form.password || ""} />
+                        </div>
+                      </details>
+
+                      <details className="rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-sm">
+                        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Practice</summary>
+                        <div className="mt-4 space-y-3">
+                          <FieldView label="Practice Name" value={form.practice_name} />
+                          <FieldView label="Practice Description" value={form.practice_description} multiline />
+                          <FieldView label="Practice Type" value={form.practice_type || "Select practice type"} />
+                          <FieldView label="Personal Website" value={form.personal_website} />
+                        </div>
+                      </details>
+
+                      <details className="rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-sm">
+                        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Password</summary>
+                        <div className="mt-4 space-y-3">
+                          <p className="text-sm leading-6 text-slate-700">
+                            Password updates are handled from the dedicated Update Password action to keep the profile view secure.
+                          </p>
+                        </div>
+                      </details>
+
+                      <details className="rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-sm">
+                        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Office &amp; Contacts</summary>
+                        <div className="mt-4 space-y-3">
+                          <FieldView label="Office Address" value={form.office_address} multiline />
+                          <FieldView label="Office District" value={form.office_district} />
+                          <FieldView label="Office Province" value={form.office_province} />
+                          <FieldView label="Office Phone" value={form.office_phone} />
+                          <FieldView label="Office Fax" value={form.office_fax} />
+                          <FieldView label="Office Website" value={form.office_website} />
+                        </div>
+                      </details>
+
+                      <details className="rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-sm">
+                        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Other Contact</summary>
+                        <div className="mt-4 space-y-3">
+                          <FieldView label="Contact Info 1 Address" value={form.contact_info_1_address} multiline />
+                          <FieldView label="Contact Info 1 Phone" value={form.contact_info_1_phone} />
+                          <FieldView label="Contact Info 1 Email" value={form.contact_info_1_email} />
+                          <FieldView label="Contact Info 2 Address" value={form.contact_info_2_address} multiline />
+                          <FieldView label="Contact Info 2 Phone" value={form.contact_info_2_phone} />
+                          <FieldView label="Contact Info 2 Email" value={form.contact_info_2_email} />
+                        </div>
+                      </details>
+
+                      <details className="rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-sm">
+                        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">More Details</summary>
+                        <div className="mt-4 space-y-3">
+                          <FieldView label="Positions Held" value={form.positions_held} multiline />
+                          <FieldView label="Personal Website" value={form.personal_website} />
+                        </div>
+                      </details>
+
+                      <details className="rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-sm">
+                        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Qualifications &amp; Awards</summary>
+                        <div className="mt-4 space-y-3">
+                          <FieldView label="Academic Qualifications" value={form.academic_qualifications} multiline />
+                          <FieldView label="Professional Qualifications" value={form.professional_qualifications} multiline />
+                          <FieldView label="SLIA Awards" value={form.slia_awards} multiline />
+                          <FieldView label="Other Awards" value={form.other_awards} multiline />
+                        </div>
+                      </details>
+                    </div>
+                  )}
+
                   {!editMode ? (
-                    <div className="space-y-5">
+                    <div className="hidden space-y-5 md:block">
                       <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Profile Summary</p>
                         <p className="mt-2 text-sm text-slate-700">Click <span className="font-semibold">Edit Profile</span> to open the form and change your details.</p>
@@ -829,7 +966,6 @@ const MemberPortal = () => {
                             <FieldView label="Full Name *" value={form.full_name} span />
                             <FieldView label="Name With Initials" value={form.name_with_initials} />
                             <FieldView label="Yearbook Name" value={form.yearbook_name} />
-                            <FieldView label="Photo" value={form.photo} />
                             <FieldView label="NIC Number" value={form.nic_number} />
                             <FieldView label="Gender" value={form.gender} />
                             <FieldView label="Date of Birth" value={form.date_of_birth} span />
@@ -839,50 +975,45 @@ const MemberPortal = () => {
                         <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Home Contact</p>
                           <p className="mt-2 text-base font-semibold text-red-600">These details will be used for SLIA communication purposes, including emails, calls, and postals.</p>
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                          <FieldView label="Home Address" value={form.home_address} multiline span />
+                          <FieldView label="Home District" value={form.home_district} />
+                          <FieldView label="Home Province" value={form.home_province} />
+                          <FieldView label="Location District" value={form.location_district} />
+                          <FieldView label="Location Province" value={form.location_province} />
+                          <FieldView label="Home Phone" value={form.home_phone} />
+                          <FieldView label="Home Fax" value={form.home_fax} />
+                          <FieldView label="Home Email" value={form.home_email} />
+                        </div>
+                      </div>
+
+                        <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Membership &amp; Professional</p>
                           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                            <FieldView label="Home Address" value={form.home_address} multiline span />
-                            <FieldView label="Home District" value={form.home_district} />
-                            <FieldView label="Home Province" value={form.home_province} />
-                            <FieldView label="Home Phone" value={form.home_phone} />
-                            <FieldView label="Home Fax" value={form.home_fax} />
-                            <FieldView label="Home Email" value={form.home_email} />
+                            <FieldView label="Membership Type" value={form.membership_type || "Student"} />
+                            <FieldView label="Membership Number" value={form.membership_number} />
+                            <FieldView label="Membership Year" value={form.membership_year} />
+                            <FieldView label="ARB Number" value={form.arb_number} />
+                            <FieldView label="Username" value={form.username} span />
+                            <FieldView label="Password" value={form.password || ""} span />
                           </div>
                         </div>
 
-                          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Membership &amp; Professional</p>
-                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                              <FieldView label="Membership Type" value={form.membership_type || "Student"} />
-                              <FieldView label="Membership Number" value={form.membership_number} />
-                              <FieldView label="Membership Year" value={form.membership_year} />
-                              <FieldView label="ARB Number" value={form.arb_number} />
-                              <FieldView label="Username" value={form.username} span />
-                            </div>
+                        <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Practice</p>
+                          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                            <FieldView label="Practice Name" value={form.practice_name} span />
+                            <FieldView label="Practice Description" value={form.practice_description} multiline span />
+                            <FieldView label="Practice Type" value={form.practice_type || "Select practice type"} />
+                            <FieldView label="Personal Website" value={form.personal_website} />
                           </div>
+                        </div>
 
                           <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Qualifications</p>
                             <div className="mt-4 grid gap-3">
                               <FieldView label="Academic Qualifications" value={form.academic_qualifications} multiline />
                               <FieldView label="Professional Qualifications" value={form.professional_qualifications} multiline />
-                            </div>
-                          </div>
-
-                          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Practice Details</p>
-                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                              <FieldView label="Practice Name" value={form.practice_name} span />
-                              <FieldView label="Practice Description" value={form.practice_description} multiline span />
-                              <FieldView label="Practice Type" value={form.practice_type || "Select practice type"} />
-                              <FieldView label="Personal Website" value={form.personal_website} />
-                            </div>
-                          </div>
-
-                          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Location</p>
-                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                              <FieldView label="District" value={form.location_district} />
-                              <FieldView label="Province" value={form.location_province} />
                             </div>
                           </div>
 
@@ -944,14 +1075,16 @@ const MemberPortal = () => {
                       <form onSubmit={saveProfile} className="space-y-6" ref={editFormRef}>
                         <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Personal Details</p>
+                          <p className="mt-2 text-sm leading-6 text-slate-600">
+                            Only Yearbook Name and Date of Birth can be updated here. All other personal fields are kept locked.
+                          </p>
                           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                            <div className="space-y-2 sm:col-span-2"><Label>Full Name *</Label><Input readOnly={!editMode} value={form.full_name || ""} onChange={(e) => setForm((c) => ({ ...c, full_name: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
-                            <div className="space-y-2"><Label>Name With Initials</Label><Input readOnly={!editMode} value={form.name_with_initials || ""} onChange={(e) => setForm((c) => ({ ...c, name_with_initials: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
+                            <div className="space-y-2 sm:col-span-2"><Label>Full Name *</Label><Input readOnly value={form.full_name || ""} className="bg-muted/60" /></div>
+                            <div className="space-y-2"><Label>Name With Initials</Label><Input readOnly value={form.name_with_initials || ""} className="bg-muted/60" /></div>
                             <div className="space-y-2"><Label>Yearbook Name</Label><Input readOnly={!editMode} value={form.yearbook_name || ""} onChange={(e) => setForm((c) => ({ ...c, yearbook_name: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
-                            <div className="space-y-2"><Label>Photo</Label><Input type="file" accept="image/*" disabled={!editMode} /></div>
-                            <div className="space-y-2"><Label>NIC Number</Label><Input readOnly={!editMode} value={form.nic_number || ""} onChange={(e) => setForm((c) => ({ ...c, nic_number: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
-                            <div className="space-y-2"><Label>Gender</Label><Input readOnly={!editMode} value={form.gender || ""} onChange={(e) => setForm((c) => ({ ...c, gender: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
-                            <div className="space-y-2 sm:col-span-2"><Label>Date of Birth</Label><Input readOnly={!editMode} value={form.date_of_birth || ""} onChange={(e) => setForm((c) => ({ ...c, date_of_birth: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} placeholder="mm/dd/yyyy" /></div>
+                            <div className="space-y-2"><Label>NIC Number</Label><Input readOnly value={form.nic_number || ""} className="bg-muted/60" /></div>
+                            <div className="space-y-2"><Label>Gender</Label><Input readOnly value={form.gender || ""} className="bg-muted/60" /></div>
+                            <div className="space-y-2 sm:col-span-2"><Label>Date of Birth</Label><Input type="date" readOnly={!editMode} value={normalizeDateInput(form.date_of_birth)} onChange={(e) => setForm((c) => ({ ...c, date_of_birth: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
                           </div>
                         </section>
 
@@ -962,6 +1095,8 @@ const MemberPortal = () => {
                             <div className="space-y-2 sm:col-span-2"><Label>Home Address</Label><Textarea readOnly={!editMode} value={form.home_address || ""} onChange={(e) => setForm((c) => ({ ...c, home_address: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
                             <div className="space-y-2"><Label>Home District</Label><Input readOnly={!editMode} value={form.home_district || ""} onChange={(e) => setForm((c) => ({ ...c, home_district: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
                             <div className="space-y-2"><Label>Home Province</Label><Input readOnly={!editMode} value={form.home_province || ""} onChange={(e) => setForm((c) => ({ ...c, home_province: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
+                            <div className="space-y-2"><Label>Location District</Label><Input readOnly={!editMode} value={form.location_district || ""} onChange={(e) => setForm((c) => ({ ...c, location_district: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
+                            <div className="space-y-2"><Label>Location Province</Label><Input readOnly={!editMode} value={form.location_province || ""} onChange={(e) => setForm((c) => ({ ...c, location_province: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
                             <div className="space-y-2"><Label>Home Phone</Label><Input readOnly={!editMode} value={form.home_phone || ""} onChange={(e) => setForm((c) => ({ ...c, home_phone: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
                             <div className="space-y-2"><Label>Home Fax</Label><Input readOnly={!editMode} value={form.home_fax || ""} onChange={(e) => setForm((c) => ({ ...c, home_fax: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
                             <div className="space-y-2"><Label>Home Email</Label><Input readOnly={!editMode} value={form.home_email || ""} onChange={(e) => setForm((c) => ({ ...c, home_email: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
@@ -971,37 +1106,30 @@ const MemberPortal = () => {
                         <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Membership &amp; Professional</p>
                           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                            <div className="space-y-2"><Label>Membership Type</Label><Input readOnly={!editMode} value={form.membership_type || "Student"} onChange={(e) => setForm((c) => ({ ...c, membership_type: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
+                            <div className="space-y-2"><Label>Membership Type</Label><Input readOnly value={form.membership_type || "Student"} className="bg-muted/60" /></div>
                             <div className="space-y-2"><Label>Membership Number</Label><Input readOnly value={form.membership_number || ""} className="bg-muted/60" /></div>
-                            <div className="space-y-2"><Label>Membership Year</Label><Input readOnly={!editMode} value={form.membership_year || ""} onChange={(e) => setForm((c) => ({ ...c, membership_year: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
-                            <div className="space-y-2"><Label>ARB Number</Label><Input readOnly={!editMode} value={form.arb_number || ""} onChange={(e) => setForm((c) => ({ ...c, arb_number: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
+                            <div className="space-y-2"><Label>Membership Year</Label><Input readOnly value={form.membership_year || ""} className="bg-muted/60" /></div>
+                            <div className="space-y-2"><Label>ARB Number</Label><Input readOnly value={form.arb_number || ""} className="bg-muted/60" /></div>
                             <div className="space-y-2 sm:col-span-2"><Label>Username</Label><Input readOnly value={form.username || ""} className="bg-muted/60" /></div>
+                            <div className="space-y-2 sm:col-span-2"><Label>Password</Label><Input readOnly type={showPassword ? "text" : "password"} value={form.password || ""} className="bg-muted/60" /></div>
                           </div>
                         </section>
 
                         <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Qualifications</p>
                           <div className="mt-4 grid gap-4">
-                            <div className="space-y-2"><Label>Academic Qualifications</Label><Textarea readOnly={!editMode} value={form.academic_qualifications || ""} onChange={(e) => setForm((c) => ({ ...c, academic_qualifications: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
-                            <div className="space-y-2"><Label>Professional Qualifications</Label><Textarea readOnly={!editMode} value={form.professional_qualifications || ""} onChange={(e) => setForm((c) => ({ ...c, professional_qualifications: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
+                            <div className="space-y-2"><Label>Academic Qualifications</Label><Textarea readOnly value={form.academic_qualifications || ""} className="bg-muted/60" /></div>
+                            <div className="space-y-2"><Label>Professional Qualifications</Label><Textarea readOnly value={form.professional_qualifications || ""} className="bg-muted/60" /></div>
                           </div>
                         </section>
 
                         <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-                          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Practice Details</p>
+                          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Practice</p>
                           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                            <div className="space-y-2 sm:col-span-2"><Label>Practice Name</Label><Input readOnly={!editMode} value={form.practice_name || ""} onChange={(e) => setForm((c) => ({ ...c, practice_name: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
-                            <div className="space-y-2 sm:col-span-2"><Label>Practice Description</Label><Textarea readOnly={!editMode} value={form.practice_description || ""} onChange={(e) => setForm((c) => ({ ...c, practice_description: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
-                            <div className="space-y-2"><Label>Practice Type</Label><Input readOnly={!editMode} value={form.practice_type || ""} onChange={(e) => setForm((c) => ({ ...c, practice_type: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} placeholder="Select practice type" /></div>
-                            <div className="space-y-2"><Label>Personal Website</Label><Input readOnly={!editMode} value={form.personal_website || ""} onChange={(e) => setForm((c) => ({ ...c, personal_website: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
-                          </div>
-                        </section>
-
-                        <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-                          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Location</p>
-                          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                            <div className="space-y-2"><Label>District</Label><Input readOnly={!editMode} value={form.location_district || ""} onChange={(e) => setForm((c) => ({ ...c, location_district: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
-                            <div className="space-y-2"><Label>Province</Label><Input readOnly={!editMode} value={form.location_province || ""} onChange={(e) => setForm((c) => ({ ...c, location_province: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
+                            <div className="space-y-2 sm:col-span-2"><Label>Practice Name</Label><Input readOnly value={form.practice_name || ""} className="bg-muted/60" /></div>
+                            <div className="space-y-2 sm:col-span-2"><Label>Practice Description</Label><Textarea readOnly value={form.practice_description || ""} className="bg-muted/60" /></div>
+                            <div className="space-y-2"><Label>Practice Type</Label><Input readOnly value={form.practice_type || ""} className="bg-muted/60" placeholder="Select practice type" /></div>
+                            <div className="space-y-2"><Label>Personal Website</Label><Input readOnly value={form.personal_website || ""} className="bg-muted/60" /></div>
                           </div>
                         </section>
 
@@ -1019,20 +1147,14 @@ const MemberPortal = () => {
                         </section>
 
                         <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-                          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Contact Info 1</p>
+                          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Other Contact</p>
                           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                            <div className="space-y-2 sm:col-span-2"><Label>Address</Label><Textarea readOnly={!editMode} value={form.contact_info_1_address || ""} onChange={(e) => setForm((c) => ({ ...c, contact_info_1_address: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
-                            <div className="space-y-2"><Label>Phone</Label><Input readOnly={!editMode} value={form.contact_info_1_phone || ""} onChange={(e) => setForm((c) => ({ ...c, contact_info_1_phone: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
-                            <div className="space-y-2"><Label>Email</Label><Input readOnly={!editMode} value={form.contact_info_1_email || ""} onChange={(e) => setForm((c) => ({ ...c, contact_info_1_email: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
-                          </div>
-                        </section>
-
-                        <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-                          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Contact Info 2</p>
-                          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                            <div className="space-y-2 sm:col-span-2"><Label>Address</Label><Textarea readOnly={!editMode} value={form.contact_info_2_address || ""} onChange={(e) => setForm((c) => ({ ...c, contact_info_2_address: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
-                            <div className="space-y-2"><Label>Phone</Label><Input readOnly={!editMode} value={form.contact_info_2_phone || ""} onChange={(e) => setForm((c) => ({ ...c, contact_info_2_phone: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
-                            <div className="space-y-2"><Label>Email</Label><Input readOnly={!editMode} value={form.contact_info_2_email || ""} onChange={(e) => setForm((c) => ({ ...c, contact_info_2_email: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
+                            <div className="space-y-2 sm:col-span-2"><Label>Contact Info 1 Address</Label><Textarea readOnly={!editMode} value={form.contact_info_1_address || ""} onChange={(e) => setForm((c) => ({ ...c, contact_info_1_address: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
+                            <div className="space-y-2"><Label>Contact Info 1 Phone</Label><Input readOnly={!editMode} value={form.contact_info_1_phone || ""} onChange={(e) => setForm((c) => ({ ...c, contact_info_1_phone: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
+                            <div className="space-y-2"><Label>Contact Info 1 Email</Label><Input readOnly={!editMode} value={form.contact_info_1_email || ""} onChange={(e) => setForm((c) => ({ ...c, contact_info_1_email: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
+                            <div className="space-y-2 sm:col-span-2"><Label>Contact Info 2 Address</Label><Textarea readOnly={!editMode} value={form.contact_info_2_address || ""} onChange={(e) => setForm((c) => ({ ...c, contact_info_2_address: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
+                            <div className="space-y-2"><Label>Contact Info 2 Phone</Label><Input readOnly={!editMode} value={form.contact_info_2_phone || ""} onChange={(e) => setForm((c) => ({ ...c, contact_info_2_phone: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
+                            <div className="space-y-2"><Label>Contact Info 2 Email</Label><Input readOnly={!editMode} value={form.contact_info_2_email || ""} onChange={(e) => setForm((c) => ({ ...c, contact_info_2_email: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
                           </div>
                         </section>
 

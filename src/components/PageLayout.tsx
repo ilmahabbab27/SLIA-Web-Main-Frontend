@@ -26,9 +26,9 @@ interface PageLayoutProps {
 
 const PageLayout = ({ children, title, subtitle, breadcrumb, action }: PageLayoutProps) => {
   return (
-    <div className="min-h-screen bg-background pt-40 sm:pt-28">
+    <div className="min-h-screen bg-background pt-20 sm:pt-20">
       <SiteHeader />
-      <div className="section-dark py-12 sm:py-14 md:py-20">
+      <div className="section-dark py-8 sm:py-12 md:py-16">
         <div className="mx-auto w-full max-w-7xl px-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between sm:px-4 lg:px-6">
           <div>
             <p className="mb-2 flex flex-wrap items-center gap-1 text-sm font-medium uppercase tracking-wider text-section-dark-foreground/50">

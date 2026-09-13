@@ -64,9 +64,10 @@ const formatDisplayDate = (value?: string | null) => {
     return "-";
   }
 
-  const parsed = new Date(value);
+  const normalized = value.includes("T") ? value.split("T")[0] : value;
+  const parsed = new Date(normalized);
   if (Number.isNaN(parsed.getTime())) {
-    return value;
+    return normalized;
   }
 
   return new Intl.DateTimeFormat("en-GB", {
