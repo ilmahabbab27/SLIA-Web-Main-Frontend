@@ -1217,6 +1217,51 @@ export const contactApi = {
   },
 };
 
+export interface ComplaintItem {
+  id: number;
+  name: string;
+  email?: string | null;
+  category: string;
+  subject: string;
+  message: string;
+  attachment_name?: string | null;
+  status: "new" | "in_progress" | "resolved" | "closed";
+  created_at?: string;
+  updated_at?: string;
+}
+
+export const complaintApi = {
+  list: async (): Promise<ComplaintItem[]> => {
+    const res = await fetch(`${API_BASE}/complaints`, { headers: headers() });
+    if (res.status === 401) {
+      localStorage.removeItem(ADMIN_TOKEN_KEY);
+      localStorage.removeItem(ADMIN_USER_KEY);
+      throw new Error("Admin session expired. Please sign in again.");
+    }
+    if (!res.ok) throw new Error(`Failed to fetch complaints: ${res.status}`);
+    return res.json();
+  },
+
+  updateStatus: async (id: number, status: ComplaintItem["status"]): Promise<ComplaintItem> => {
+    const res = await fetch(`${API_BASE}/complaints/${id}`, {
+      method: "PATCH",
+      headers: headers(),
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `Failed to update complaint: ${res.status}`);
+    }
+    return res.json();
+  },
+
+  downloadAttachment: async (id: number): Promise<Blob> => {
+    const res = await fetch(`${API_BASE}/complaints/${id}/download`, { headers: authHeaders() });
+    if (!res.ok) throw new Error(`Failed to download attachment: ${res.status}`);
+    return res.blob();
+  },
+};
+
 // ---------------------------------------------------------------------------
 // News & Highlights
 // ---------------------------------------------------------------------------
@@ -1392,11 +1437,27 @@ export const tickerApi = {
 
   /** DELETE /api/tickers/:id */
   delete: async (id: number): Promise<void> => {
-    const res = await fetch(`${API_BASE}/tickers/${id}`, {
-      method: "DELETE",
-      headers: headers(),
-    });
-    if (!res.ok) throw new Error("Failed to delete ticker item");
+    const urls = [`${API_BASE}/tickers/${id}`, `${API_BASE}/ticker/${id}`];
+
+    let lastError: Response | null = null;
+
+    for (const url of urls) {
+      const res = await fetch(url, {
+        method: "DELETE",
+        headers: headers(),
+      });
+
+      if (res.ok) return;
+
+      lastError = res;
+
+      if (res.status !== 404) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `Failed to delete ticker item: ${res.status}`);
+      }
+    }
+
+    throw new Error(`Failed to delete ticker item: ${lastError?.status || "unknown error"}`);
   },
 };
 

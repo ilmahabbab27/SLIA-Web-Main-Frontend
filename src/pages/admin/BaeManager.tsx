@@ -822,7 +822,6 @@ const BaeMemberManager = ({ memberType }: { memberType?: BaeMemberType }) => {
                   <th className="px-4 py-4">Personal Details</th>
                   <th className="px-4 py-4">Contact</th>
                   <th className="px-4 py-4">Username</th>
-                  <th className="px-4 py-4">Password</th>
                   <th className="px-4 py-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -846,7 +845,6 @@ const BaeMemberManager = ({ memberType }: { memberType?: BaeMemberType }) => {
                       </div>
                     </td>
                     <td className="px-4 py-4 align-top text-white">{member.username || "-"}</td>
-                    <td className="px-4 py-4 align-top text-white">{member.password || "-"}</td>
                     <td className="px-4 py-4 align-top">
                       <div className="flex justify-end gap-2">
                         <button type="button" onClick={() => setForm(member)} className="rounded p-2 text-slate-400 transition hover:bg-white/10 hover:text-white">

@@ -11,7 +11,7 @@ const WhyArchitectSection = () => {
                             <div className="relative">
                                 <div className="absolute -inset-4 bg-primary/10 rounded-3xl blur-2xl -z-10 animate-pulse" />
                                 <img
-                                    src="/images/why-architect.jpg"
+                                    src="/images/hero-1.jpg"
                                     alt="Modern Architectural Design"
                                     className="rounded-3xl shadow-2xl w-full object-cover min-h-[400px] lg:min-h-[500px]"
                                 />

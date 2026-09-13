@@ -70,6 +70,8 @@ import BomManager from "./pages/admin/BomManager";
 import BaeManager from "./pages/admin/BaeManager";
 import PabManager from "./pages/admin/PabManager";
 import SliaManager from "./pages/admin/SliaManager";
+import ComplaintsManager from "./pages/admin/ComplaintsManager";
+import FloatingChatbot from "./components/FloatingChatbot";
 
 const queryClient = new QueryClient();
 
@@ -120,6 +122,7 @@ const AppRoutes = () => (
               <Route path="pab" element={<PabManager />} />
               <Route path="slia" element={<SliaManager />} />
               <Route path="contact" element={<ContactManager />} />
+              <Route path="complaints" element={<ComplaintsManager />} />
               <Route path="faqs" element={<FAQManager />} />
               <Route path="ticker" element={<TickerManager />} />
               <Route path="award-categories" element={<AwardCategoriesManager />} />
@@ -170,6 +173,7 @@ const App = () => {
         <Sonner />
         <AnimatePresence mode="wait">{showSplash && <SplashScreen />}</AnimatePresence>
         <AppRoutes />
+        <FloatingChatbot />
     </TooltipProvider>
   </QueryClientProvider>
   );

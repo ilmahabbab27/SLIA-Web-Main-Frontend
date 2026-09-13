@@ -59,9 +59,17 @@ const initialsFor = (name: string) =>
     .join("")
     .toUpperCase();
 
+const removeEmptyText = <T extends Record<string, unknown>>(item: T): T =>
+  Object.fromEntries(
+    Object.entries(item).map(([key, value]) => [
+      key,
+      typeof value === "string" && ["null", "undefined", "n/a", "na"].includes(value.trim().toLowerCase()) ? "" : value,
+    ])
+  ) as T;
+
 const formatDisplayDate = (value?: string | null) => {
   if (!value || !value.trim()) {
-    return "-";
+    return "";
   }
 
   const normalized = value.includes("T") ? value.split("T")[0] : value;
@@ -101,7 +109,9 @@ const FindAnArchitect = () => {
         headers: { Accept: "application/json" },
       });
       const data = await response.json();
-      const visibleArchitects = (data.data || []).filter((a: Architect) => allowedMembershipTypes.includes(a.membership_type || ""));
+      const visibleArchitects = (data.data || [])
+        .map((a: Architect) => removeEmptyText(a))
+        .filter((a: Architect) => allowedMembershipTypes.includes(a.membership_type || ""));
       setArchitects(visibleArchitects);
       setDistricts([...new Set(visibleArchitects.map((a: Architect) => a.location_district).filter(Boolean))].sort());
       setMembershipTypes([...new Set(visibleArchitects.map((a: Architect) => a.membership_type).filter(Boolean))].sort());
@@ -254,10 +264,10 @@ const FindAnArchitect = () => {
                                 {a.membership_type && <span className="text-xs text-foreground/60">{a.membership_type}</span>}
                               </div>
                             </TableCell>
-                            <TableCell className="text-sm text-foreground/70">{a.membership_number || "-"}</TableCell>
-                            <TableCell className="text-sm text-foreground/70">{a.arb_number || "-"}</TableCell>
-                            <TableCell className="text-sm">{[a.location_district, a.location_province].filter(Boolean).join(", ") || "-"}</TableCell>
-                            <TableCell className="text-sm">{a.practice_name || "-"}</TableCell>
+                            <TableCell className="text-sm text-foreground/70">{a.membership_number || ""}</TableCell>
+                            <TableCell className="text-sm text-foreground/70">{a.arb_number || ""}</TableCell>
+                            <TableCell className="text-sm">{[a.location_district, a.location_province].filter(Boolean).join(", ") || ""}</TableCell>
+                            <TableCell className="text-sm">{a.practice_name || ""}</TableCell>
                             <TableCell>
                               <div className="flex flex-col gap-1">
                                 {a.office_email && (

@@ -85,6 +85,13 @@ const fileToDataUrl = (file: File) =>
 const normalizeText = (value: string) => value.replace(/\s+/g, " ").trim();
 const normalizeUpper = (value: string) => normalizeText(value).toUpperCase();
 const normalizeEmail = (value: string) => normalizeText(value).toLowerCase();
+const removeEmptyText = <T extends Record<string, unknown>>(item: T): T =>
+  Object.fromEntries(
+    Object.entries(item).map(([key, value]) => [
+      key,
+      typeof value === "string" && ["null", "undefined", "n/a", "na"].includes(value.trim().toLowerCase()) ? "" : value,
+    ])
+  ) as T;
 const normalizeDate = (value?: string | null) => {
   if (!value) return "";
   const match = String(value).match(/^\d{4}-\d{2}-\d{2}/);
@@ -194,7 +201,7 @@ const SliaManager = ({ hideExtendedSections = false }: SliaManagerProps) => {
       });
       if (!response.ok) throw new Error(await readErrorMessage(response, "Failed to fetch members"));
       const data = await response.json();
-      setMembers(data.data || []);
+      setMembers((data.data || []).map((member: SliaMember) => removeEmptyText(member)));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to fetch members";
       setError(message);
@@ -919,7 +926,6 @@ const SliaManager = ({ hideExtendedSections = false }: SliaManagerProps) => {
                     <th className="px-4 py-4">Personal Details</th>
                     <th className="px-4 py-4">Contact</th>
                     <th className="px-4 py-4">Username</th>
-                    <th className="px-4 py-4">Password</th>
                     <th className="px-4 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -945,7 +951,6 @@ const SliaManager = ({ hideExtendedSections = false }: SliaManagerProps) => {
                         </div>
                       </td>
                       <td className="px-4 py-4 align-top text-white">{member.username || "-"}</td>
-                      <td className="px-4 py-4 align-top text-white">{member.password || "-"}</td>
                       <td className="px-4 py-4 align-top">
                         <div className="flex justify-end gap-2">
                           <button

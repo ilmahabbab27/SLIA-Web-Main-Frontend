@@ -35,6 +35,7 @@ type Member = {
   office_email?: string;
   office_phone?: string;
   home_email?: string;
+  slia_contact_email?: string;
   home_phone?: string;
   office_address?: string;
   home_district?: string;
@@ -66,10 +67,22 @@ type FieldViewProps = {
 
 const MEMBER_SESSION_KEY = "slia_member_session";
 const normalizeMembershipNumber = (value: string) => value.toUpperCase().replace(/\s+/g, "").replace(/[^A-Z0-9/-]/g, "");
+const normalizeLoginIdentifier = (value: string) => value.trim();
 const isValidEmail = (value?: string | null) => !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const isValidDateInput = (value?: string | null) => !value || !Number.isNaN(Date.parse(value));
 const isValidMembershipNumber = (value: string) => /^[A-Z0-9/-]+$/.test(value) && value.length >= 3;
+const isValidLoginIdentifier = (value: string) => value.length >= 3 && !/[\u0000-\u001F\u007F]/.test(value);
 const isStrongPassword = (value: string) => value.length >= 8;
+const getResponseMessage = (text: string, fallback: string) => {
+  try {
+    const parsed = JSON.parse(text) as { message?: string; errors?: Record<string, string[]> };
+    if (parsed.message) return parsed.message;
+    const firstValidationError = Object.values(parsed.errors || {}).flat()[0];
+    return firstValidationError || fallback;
+  } catch {
+    return text || fallback;
+  }
+};
 const formatDisplayDate = (value?: string | null) => {
   if (!value || !value.trim()) {
     return "";
@@ -115,6 +128,7 @@ const MemberPortal = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState("");
   const [saving, setSaving] = useState(false);
   const [membershipNumber, setMembershipNumber] = useState("");
   const [email, setEmail] = useState("");
@@ -123,6 +137,7 @@ const MemberPortal = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [signupOtpSent, setSignupOtpSent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [recoveryMode, setRecoveryMode] = useState<"reset" | "forgot" | null>(null);
@@ -178,11 +193,12 @@ const MemberPortal = () => {
 
   const login = async (event: React.FormEvent) => {
     event.preventDefault();
+    setAuthError("");
     setAuthLoading(true);
     try {
-      const username = normalizeMembershipNumber(membershipNumber);
-      if (!isValidMembershipNumber(username)) {
-        throw new Error("Membership number is invalid.");
+      const identifier = normalizeLoginIdentifier(membershipNumber);
+      if (!isValidLoginIdentifier(identifier)) {
+        throw new Error("Username or membership number is invalid.");
       }
       const response = await fetch(`${API_BASE}/member/login`, {
         method: "POST",
@@ -191,22 +207,22 @@ const MemberPortal = () => {
           Accept: "application/json",
         },
         body: JSON.stringify({
-          membership_number: username,
+          username: identifier,
           password,
         }),
       });
 
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(text || "Sign in failed");
+        throw new Error(getResponseMessage(text, "Sign in failed"));
       }
 
       const result = await response.json();
       const member = result.data || result;
       const normalizedMember = {
         ...member,
-        membership_number: normalizeMembershipNumber(member.membership_number || member.username || username),
-        username: normalizeMembershipNumber(member.membership_number || member.username || username),
+        membership_number: member.membership_number || "",
+        username: member.username || member.membership_number || identifier,
       };
 
       setActiveMember(normalizedMember);
@@ -216,17 +232,18 @@ const MemberPortal = () => {
       window.localStorage.setItem(MEMBER_SESSION_KEY, JSON.stringify(normalizedMember));
       toast.success("Signed in");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Sign in failed");
+      const message = error instanceof Error ? error.message : "Sign in failed";
+      setAuthError(message);
+      toast.error(message);
     } finally {
       setAuthLoading(false);
     }
   };
 
-  const signup = async (event: React.FormEvent) => {
+  const sendSignupOtp = async (event: React.FormEvent) => {
     event.preventDefault();
     const memberNo = normalizeMembershipNumber(membershipNumber);
     const signupEmail = email.trim();
-    const nextPassword = password.trim();
 
     if (!memberNo) {
       toast.error("Membership number is required.");
@@ -244,6 +261,43 @@ const MemberPortal = () => {
       toast.error("Please enter a valid email address.");
       return;
     }
+    setAuthLoading(true);
+    try {
+      const response = await fetch(`${API_BASE}/member/registration-otp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          membership_number: memberNo,
+          email: signupEmail,
+        }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(getResponseMessage(text, "Failed to send registration code"));
+      }
+      setSignupOtpSent(true);
+      toast.success("Registration code sent to your email");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to send registration code");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const signup = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const memberNo = normalizeMembershipNumber(membershipNumber);
+    const signupEmail = email.trim();
+    const nextPassword = password.trim();
+
+    if (!otp || otp.length !== 6) {
+      toast.error("Enter the 6-digit registration code.");
+      return;
+    }
     if (!nextPassword) {
       toast.error("Password is required.");
       return;
@@ -259,7 +313,7 @@ const MemberPortal = () => {
 
     setAuthLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/member/register`, {
+      const response = await fetch(`${API_BASE}/member/registration-otp/verify`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -267,15 +321,16 @@ const MemberPortal = () => {
         },
         body: JSON.stringify({
           membership_number: memberNo,
-          username: memberNo,
           email: signupEmail,
+          otp,
           password: nextPassword,
+          password_confirmation: confirmPassword,
         }),
       });
 
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(text || "Failed to create member account");
+        throw new Error(getResponseMessage(text, "Failed to create member account"));
       }
       const created = await response.json();
       const nextMember = created.data || created;
@@ -342,7 +397,7 @@ const MemberPortal = () => {
 
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(text || "Failed to reset password");
+        throw new Error(getResponseMessage(text, "Failed to reset password"));
       }
 
       setPassword("");
@@ -396,7 +451,7 @@ const MemberPortal = () => {
 
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(text || "Failed to send OTP");
+        throw new Error(getResponseMessage(text, "Failed to send OTP"));
       }
 
       setOtpSent(true);
@@ -418,8 +473,8 @@ const MemberPortal = () => {
       toast.error("Send the OTP first.");
       return;
     }
-    if (!otp.trim()) {
-      toast.error("OTP is required.");
+    if (!/^\d{6}$/.test(otp.trim())) {
+      toast.error("Enter the 6-digit OTP sent to your email.");
       return;
     }
     if (!nextPassword) {
@@ -454,7 +509,7 @@ const MemberPortal = () => {
 
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(text || "Failed to reset password");
+        throw new Error(getResponseMessage(text, "Failed to reset password"));
       }
 
       setOtp("");
@@ -487,7 +542,7 @@ const MemberPortal = () => {
       toast.error("Date of Birth must be a valid date.");
       return;
     }
-    const profileEmails = [form.office_email, form.home_email, form.contact_info_1_email, form.contact_info_2_email].filter(Boolean);
+    const profileEmails = [form.slia_contact_email, form.office_email, form.home_email, form.contact_info_1_email, form.contact_info_2_email].filter(Boolean);
     if (profileEmails.some((email) => !isValidEmail(email))) {
       toast.error("One or more email addresses are invalid.");
       return;
@@ -508,7 +563,7 @@ const MemberPortal = () => {
       });
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(text || "Failed to update profile");
+        throw new Error(getResponseMessage(text, "Failed to update profile"));
       }
       const updated = await response.json();
       const nextMember = updated.data || updated;
@@ -591,7 +646,7 @@ const MemberPortal = () => {
                     <div className="grid gap-3 rounded-[1.5rem] border border-white/10 bg-white/5 p-4 text-sm text-emerald-100/90 backdrop-blur sm:p-5">
                       <div className="grid gap-2">
                         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300/80">Portal Rules</p>
-                        <p>Membership number works as the username.</p>
+                        <p>Sign in with your username or membership number.</p>
                       </div>
                       <div className="grid gap-2">
                         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300/80">Security</p>
@@ -610,7 +665,7 @@ const MemberPortal = () => {
                 <div className="mb-5 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                   <div>
                     <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">{authTitle}</h2>
-                    <p className="mt-1 text-sm text-emerald-700">Use your membership number as the username.</p>
+                    <p className="mt-1 text-sm text-emerald-700">Use your username or membership number to access the portal.</p>
                   </div>
                   <div className="rounded-2xl bg-emerald-100 p-3 text-emerald-700 shadow-sm">
                     <UserRound className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -627,39 +682,55 @@ const MemberPortal = () => {
                 </div>
 
                 <div className="mb-5 rounded-[1.25rem] border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-800">
-                  {mode === "login" ? "Sign in with your membership number and password." : "Already have an account? Sign in below."}
+                  {mode === "login" ? "Sign in with your username or membership number and password." : "Already have an account? Sign in below."}
                   <p className="mt-2 font-medium">Only Associate members and above can use the portal.</p>
                 </div>
 
-                <form onSubmit={mode === "login" ? login : signup} className="space-y-4">
+                <form onSubmit={mode === "login" ? login : (signupOtpSent ? signup : sendSignupOtp)} className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Membership No</Label>
+                    <Label>{mode === "login" ? "Username or Membership No" : "Membership No"}</Label>
                     <Input
                       value={membershipNumber}
-                      onChange={(e) => setMembershipNumber(normalizeMembershipNumber(e.target.value))}
-                      placeholder="e.g. SLIA/1234 or A00SOMETHING"
+                      onChange={(e) => setMembershipNumber(mode === "login" ? e.target.value : normalizeMembershipNumber(e.target.value))}
+                      placeholder={mode === "login" ? "Username or SLIA/1234" : "e.g. SLIA/1234 or A00SOMETHING"}
                       required
-                      autoCapitalize="characters"
+                      autoCapitalize={mode === "login" ? "none" : "characters"}
                       spellCheck={false}
                     />
-                    <p className="text-xs text-foreground/50">No spaces allowed.</p>
+                    <p className="text-xs text-foreground/50">{mode === "login" ? "Enter the username or membership number used for your account." : "No spaces allowed."}</p>
                   </div>
                   {mode !== "login" && (
                     <div className="space-y-2">
-                      <Label>Email</Label>
+                      <Label>SLIA Contact Email</Label>
                       <Input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="name@example.com"
+                        placeholder="Your correspondence email"
                         required
                       />
                     </div>
                   )}
-                  <div className="space-y-2">
-                    <Label>Password</Label>
-                    <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                  </div>
+                  {mode === "signup" && signupOtpSent && (
+                    <div className="space-y-2">
+                      <Label>Email Verification Code</Label>
+                      <Input
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                        inputMode="numeric"
+                        maxLength={6}
+                        placeholder="6-digit code"
+                        required
+                      />
+                      <p className="text-xs text-foreground/50">Check your correspondence email and enter the code to set your portal password.</p>
+                    </div>
+                  )}
+                  {mode === "login" || signupOtpSent ? (
+                    <div className="space-y-2">
+                      <Label>Password</Label>
+                      <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                    </div>
+                  ) : null}
                   {mode === "login" && (
                     <div className="text-sm">
                       <button
@@ -671,7 +742,7 @@ const MemberPortal = () => {
                       </button>
                     </div>
                   )}
-                  {mode !== "login" && (
+                  {mode !== "login" && signupOtpSent && (
                     <div className="space-y-2">
                       <Label>Confirm Password</Label>
                       <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
@@ -679,15 +750,20 @@ const MemberPortal = () => {
                   )}
                   <Button type="submit" disabled={authLoading || loading} className="h-11 w-full sm:h-12">
                     {authLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
-                    {authButton}
+                    {mode === "signup" && !signupOtpSent ? "Send Registration Code" : authButton}
                   </Button>
                 </form>
+                {mode === "login" && authError && (
+                  <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                    {authError}
+                  </div>
+                )}
 
                 {mode === "login" && recoveryMode === "forgot" && (
                   <form onSubmit={otpSent ? verifyForgotPasswordOtp : sendForgotPasswordOtp} className="mt-4 space-y-4 rounded-[1.25rem] border border-slate-200 bg-white p-4">
                     <div className="space-y-2">
-                      <Label>Email</Label>
-                      <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Registered email address" required />
+                      <Label>SLIA Contact Email</Label>
+                      <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Registered SLIA contact email" required />
                     </div>
                     {otpSent && (
                       <>
@@ -984,6 +1060,7 @@ const MemberPortal = () => {
                           <FieldView label="Home Phone" value={form.home_phone} />
                           <FieldView label="Home Fax" value={form.home_fax} />
                           <FieldView label="Home Email" value={form.home_email} />
+                          <FieldView label="SLIA Contact Email" value={form.slia_contact_email} />
                         </div>
                       </div>
 
@@ -1100,6 +1177,7 @@ const MemberPortal = () => {
                             <div className="space-y-2"><Label>Home Phone</Label><Input readOnly={!editMode} value={form.home_phone || ""} onChange={(e) => setForm((c) => ({ ...c, home_phone: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
                             <div className="space-y-2"><Label>Home Fax</Label><Input readOnly={!editMode} value={form.home_fax || ""} onChange={(e) => setForm((c) => ({ ...c, home_fax: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
                             <div className="space-y-2"><Label>Home Email</Label><Input readOnly={!editMode} value={form.home_email || ""} onChange={(e) => setForm((c) => ({ ...c, home_email: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
+                            <div className="space-y-2"><Label>SLIA Contact Email</Label><Input type="email" readOnly={!editMode} value={form.slia_contact_email || ""} onChange={(e) => setForm((c) => ({ ...c, slia_contact_email: e.target.value }))} className={!editMode ? "bg-muted/60" : ""} /></div>
                           </div>
                         </section>
 
