@@ -24,68 +24,10 @@ const navItems = [
       { name: "About the Institute", path: "/about" },
       { name: "The Council", path: "/council" },
       { name: "Board of Trustees", path: "/about-trustees" },
-      { name: "Board of Management", path: "/about-management" },
       { name: "Board of Architectural Education", path: "/about-bae" },
       { name: "Professional Affairs Board", path: "/about-pab" },
       { name: "Board of Architectural Publications", path: "/about-bap" },
-    ],
-  },
-  {
-    label: "Boards",
-    children: [
-      { name: "All Boards", path: "/boards" },
-      {
-        name: "Board of Architectural Education",
-        path: "/bae",
-        children: [
-          { name: "Student Members", path: "/bae/student-members" },
-          { name: "Graduate Members", path: "/bae/graduate-members" },
-          {
-            name: "Documents",
-            path: "/bae#bae-documents",
-            children: [
-              { name: "Applications", path: "/bae?section=applications#bae-documents" },
-              { name: "Notices", path: "/bae?section=notices#bae-documents" },
-              { name: "References", path: "/bae?section=references#bae-documents" },
-            ],
-          },
-        ],
-      },
-      {
-        name: "Board of Architectural Publications",
-        path: "/bap",
-        children: [
-          {
-            name: "Publications",
-            path: "/bap#publications",
-            children: [
-              { name: "The Architect", path: "/bap?category=the-architect#publications" },
-              { name: "Vastu", path: "/bap?category=vastu#publications" },
-              { name: "Built Environmental Journal", path: "/bap?category=built-environment#publications" },
-              { name: "Now Architecture", path: "/bap?category=now-architecture#publications" },
-              { name: "Archive Journal", path: "/bap?category=archive-journal#publications" },
-              { name: "Architects Year Book", path: "/bap?category=year-book#publications" },
-            ],
-          },
-        ],
-      },
-      {
-        name: "Board of Management",
-        path: "/management",
-        children: [
-          { name: "Programs", path: "/management#bom-programs" },
-          { name: "Associations", path: "/management#bom-associations" },
-        ],
-      },
-      {
-        name: "Professional Affairs Board",
-        path: "/pab",
-        children: [
-          { name: "CPD Events", path: "/pab#cpd-events" },
-          { name: "Applications", path: "/pab#applications-items" },
-          { name: "Publications", path: "/pab#publications-items" },
-        ],
-      },
+      { name: "Board of Management", path: "/about-management" },
     ],
   },
   {
@@ -98,8 +40,8 @@ const navItems = [
     ],
   },
   { label: "Publications", path: "/publications#publications" },
+  { label: "Resources", path: "/resources" },
   { label: "Awards", path: "/slia-awards" },
-  { label: "Notices", path: "/bae?section=notices#bae-documents" },
   { label: "Contact", path: "/contact" },
 ];
 
@@ -322,13 +264,6 @@ const SiteHeader = () => {
           >
             {memberLabel}
           </Link>
-          <Link
-            to="/find-an-architect"
-            className="shrink-0 px-2 py-2 text-[9px] font-bold uppercase tracking-wide bg-primary text-primary-foreground transition-all hover:bg-primary/90 sm:px-6 sm:py-2.5 sm:text-xs sm:tracking-widest"
-          >
-            Find an Architect
-          </Link>
-
           <button className="lg:hidden p-1 text-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
             <AnimatePresence mode="wait">
               <motion.span
@@ -386,13 +321,6 @@ const SiteHeader = () => {
                   onClick={() => setMobileOpen(false)}
                 >
                   {memberLabel}
-                </Link>
-                <Link
-                  to="/find-an-architect"
-                  className="flex items-center justify-center py-3 text-sm font-bold uppercase tracking-widest bg-primary text-primary-foreground"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Find an Architect
                 </Link>
               </div>
 

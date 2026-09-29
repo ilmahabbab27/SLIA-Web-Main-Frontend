@@ -1,8 +1,12 @@
 // ---------------------------------------------------------------------------
 // API base — points to the XAMPP Laravel backend
 // ---------------------------------------------------------------------------
+const isLocalHost =
+  typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
 export const API_BASE =
-  import.meta.env.VITE_API_BASE ||
+  (isLocalHost ? "http://127.0.0.1:8000/api" : import.meta.env.VITE_API_BASE) ||
   (import.meta.env.DEV ? "http://127.0.0.1:8000/api" : "/api");
 
 // ---------------------------------------------------------------------------
@@ -296,6 +300,16 @@ export const eventApi = {
       method: "DELETE",
       headers: headers(),
     });
+    // Some production hosts do not forward DELETE requests correctly.
+    if (res.status === 404) {
+      const fallback = await fetch(`${API_BASE}/events/${id}`, {
+        method: "PUT",
+        headers: headers(),
+        body: JSON.stringify({ is_active: false }),
+      });
+      if (fallback.ok) return;
+      throw new Error(`Failed to delete event: ${fallback.status}`);
+    }
     if (!res.ok) throw new Error(`Failed to delete event: ${res.status}`);
   },
 };
@@ -792,7 +806,8 @@ export const bomItemApi = {
 // ---------------------------------------------------------------------------
 // BAE Documents
 // ---------------------------------------------------------------------------
-export type BaeDocumentCategory = "applications" | "notices" | "references";
+export type BaeDocumentCategory = "applications" | "resources" | "notices" | "references";
+export type BaeApplicationSection = "education" | "professional_affairs" | "other";
 
 export interface BaeSettingItem {
   id: number;
@@ -825,6 +840,7 @@ export const baeSettingApi = {
 export interface BaeDocumentItem {
   id: number;
   category: BaeDocumentCategory;
+  application_section?: BaeApplicationSection | null;
   title: string;
   meta?: string;
   file_name?: string;
@@ -1319,13 +1335,16 @@ export const newsApi = {
     return res.json();
   },
 
-  /** DELETE /api/news-items/:id */
+  /** POST /api/news-items/:id/delete (works with hosts that do not forward DELETE) */
   delete: async (id: number): Promise<void> => {
-    const res = await fetch(`${API_BASE}/news-items/${id}`, {
-      method: "DELETE",
+    const res = await fetch(`${API_BASE}/news-items/${id}/delete`, {
+      method: "POST",
       headers: headers(),
     });
-    if (!res.ok) throw new Error(`Failed to delete news item: ${res.status}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `Failed to delete news item: ${res.status}`);
+    }
   },
 };
 

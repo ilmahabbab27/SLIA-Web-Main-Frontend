@@ -7,7 +7,7 @@ const footerLinks = [
   { name: "Architect", path: "/annual-awards" },
   { name: "News & Events", path: "/latest-news" },
   { name: "Education", path: "/courses" },
-  { name: "Resources", path: "/publications" },
+  { name: "Resources", path: "/resources" },
   { name: "About Us", path: "/about" },
 ];
 
@@ -15,7 +15,7 @@ const resourceLinks = [
   { name: "Annual Awards", path: "/annual-awards" },
   { name: "Publications", path: "/publications" },
   { name: "Examinations", path: "/examinations" },
-  { name: "Downloads", path: "/bae" },
+  { name: "Resources", path: "/resources" },
   { name: "Contact Us", path: "/contact" },
 ];
 
@@ -105,11 +105,11 @@ const SiteFooter = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-primary flex-shrink-0" />
-                <span className="text-section-dark-foreground/60 text-sm">072 71 64 900</span>
+                <span className="text-section-dark-foreground/60 text-sm">011 268 9900</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-primary flex-shrink-0" />
-                <span className="text-section-dark-foreground/60 text-sm">webmaster@architects.lk</span>
+                <span className="text-section-dark-foreground/60 text-sm">secretariat@architects.lk</span>
               </div>
             </div>
           </ScrollReveal>

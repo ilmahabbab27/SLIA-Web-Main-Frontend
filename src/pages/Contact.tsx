@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import PageLayout from "@/components/PageLayout";
 import { Mail, Phone, MapPin, Globe, User, BriefcaseBusiness } from "lucide-react";
 import { contactApi, type ContactEntryItem } from "@/lib/api";
+import ComplaintForm from "@/components/ComplaintForm";
 
 const iconMap = {
   address: MapPin,
@@ -115,6 +116,26 @@ const Contact = () => {
                 )}
               </div>
             </aside>
+          </div>
+
+          <div className="mt-16 grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start">
+            <div>
+              <h2 className="mb-1 font-heading text-2xl font-bold text-foreground">Submit a Complaint or Inquiry</h2>
+              <div className="mb-3 h-px w-12 bg-primary" />
+              <p className="mb-6 max-w-2xl text-sm leading-6 text-foreground/70">
+                Use the form below to contact the appropriate SLIA section or board. Include relevant details and supporting documents where available.
+              </p>
+              <ComplaintForm />
+            </div>
+            <div className="border border-border bg-muted/30 p-6 text-sm text-muted-foreground">
+              <h3 className="mb-4 text-lg font-semibold text-foreground">What to include</h3>
+              <ul className="space-y-3">
+                <li>- Date and time of the issue.</li>
+                <li>- The correct category.</li>
+                <li>- Board or member details when relevant.</li>
+                <li>- Any documents, screenshots, or references.</li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>

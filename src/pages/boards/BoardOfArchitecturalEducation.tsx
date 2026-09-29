@@ -5,7 +5,7 @@ import PageLayout from "@/components/PageLayout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { baeDocumentApi, baeSettingApi, boardApi, type BaeDocumentCategory, type BaeDocumentItem } from "@/lib/api";
+import { baeDocumentApi, baeSettingApi, boardApi, type BaeApplicationSection, type BaeDocumentCategory, type BaeDocumentItem } from "@/lib/api";
 
 const defaultBaeIntroduction =
   "The Board of Architectural Education supports the Institute's education and examination related work, including application processes, notices, reference material, and member resources.";
@@ -16,6 +16,10 @@ const documentCategories: Array<{ value: BaeDocumentCategory; label: string }> =
     label: "Applications",
   },
   {
+    value: "resources",
+    label: "Resources",
+  },
+  {
     value: "notices",
     label: "Notices",
   },
@@ -23,6 +27,12 @@ const documentCategories: Array<{ value: BaeDocumentCategory; label: string }> =
     value: "references",
     label: "References",
   },
+];
+
+const applicationSections: Array<{ value: BaeApplicationSection; label: string }> = [
+  { value: "education", label: "Education" },
+  { value: "professional_affairs", label: "Professional Affairs" },
+  { value: "other", label: "Other" },
 ];
 
 const isDocumentCategory = (value: string | null): value is BaeDocumentCategory =>
@@ -46,13 +56,16 @@ const documentYear = (item: BaeDocumentItem) => documentDate(item).slice(0, 4);
 const categoryLabel = (value: BaeDocumentCategory) =>
   documentCategories.find((category) => category.value === value)?.label || value;
 
+const applicationSectionLabel = (value?: string | null) =>
+  ({ education: "Education", professional_affairs: "Professional Affairs", other: "Other" } as Record<string, string>)[value || ""];
+
 const documentHref = (item: BaeDocumentItem) => item.file_src || item.external_url || "";
 
 const DocumentCard = ({ item }: { item: BaeDocumentItem }) => {
   const href = documentHref(item);
 
   return (
-    <article className="group rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-primary/45 hover:shadow-md sm:p-5">
+    <article className="group min-w-0 overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-primary/45 hover:shadow-md sm:p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <FileText className="h-6 w-6" />
@@ -61,7 +74,9 @@ const DocumentCard = ({ item }: { item: BaeDocumentItem }) => {
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary">
-              {item.meta || categoryLabel(item.category)}
+              {item.meta || (item.category === "applications" && item.application_section
+                ? `Applications - ${applicationSectionLabel(item.application_section)}`
+                : categoryLabel(item.category))}
             </span>
             <span className="inline-flex items-center gap-1.5 text-xs text-foreground/55">
               <CalendarDays className="h-3.5 w-3.5" />
@@ -69,7 +84,7 @@ const DocumentCard = ({ item }: { item: BaeDocumentItem }) => {
             </span>
           </div>
 
-          <h3 className="font-heading text-lg font-bold leading-snug text-foreground group-hover:text-primary">
+          <h3 className="break-words font-heading text-lg font-bold leading-snug text-foreground group-hover:text-primary">
             {item.title}
           </h3>
 
@@ -105,11 +120,12 @@ const EmptyState = () => (
   </div>
 );
 
-const DocumentLibrary = ({ documents }: { documents: BaeDocumentItem[] }) => {
+export const DocumentLibrary = ({ documents }: { documents: BaeDocumentItem[] }) => {
   const location = useLocation();
   const section = new URLSearchParams(location.search).get("section");
   const initialCategory = isDocumentCategory(section) ? section : "all";
   const [category, setCategory] = useState<CategoryFilter>(initialCategory);
+  const [applicationSection, setApplicationSection] = useState<"all" | BaeApplicationSection>("all");
   const [query, setQuery] = useState("");
   const [year, setYear] = useState("all");
   const [sort, setSort] = useState<SortKey>("newest");
@@ -141,6 +157,7 @@ const DocumentLibrary = ({ documents }: { documents: BaeDocumentItem[] }) => {
 
     const items = documents
       .filter((item) => category === "all" || item.category === category)
+      .filter((item) => applicationSection === "all" || item.application_section === applicationSection)
       .filter((item) => year === "all" || documentYear(item) === year)
       .filter((item) => {
         if (!normalizedQuery) return true;
@@ -159,27 +176,10 @@ const DocumentLibrary = ({ documents }: { documents: BaeDocumentItem[] }) => {
     });
 
     return items;
-  }, [category, documents, query, sort, year]);
+  }, [applicationSection, category, documents, query, sort, year]);
 
   return (
-    <div className="space-y-8 lg:flex lg:items-start lg:gap-8 lg:space-y-0">
-      <div className="lg:hidden">
-        <Label className="text-sm text-foreground/70">Document Section</Label>
-        <Select value={category} onValueChange={(value) => setCategory(value as CategoryFilter)}>
-          <SelectTrigger className="mt-2">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Documents ({documents.length})</SelectItem>
-            {documentCategories.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label} ({categoryCounts[item.value] || 0})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
+    <div className="min-w-0 space-y-8 lg:flex lg:items-start lg:gap-8 lg:space-y-0">
       <aside className="hidden lg:sticky lg:top-28 lg:block lg:w-[280px] lg:shrink-0 lg:self-start">
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
           <button
@@ -205,6 +205,30 @@ const DocumentLibrary = ({ documents }: { documents: BaeDocumentItem[] }) => {
               <span className="shrink-0">{categoryCounts[item.value] || 0}</span>
             </button>
           ))}
+          <div className="mt-4 border-t border-border pt-4">
+            <p className="mb-2 px-4 text-xs font-bold uppercase tracking-widest text-foreground/50">Application Section</p>
+            <button
+              type="button"
+              onClick={() => setApplicationSection("all")}
+              className={`mb-1 flex w-full rounded-xl px-4 py-2 text-left text-sm font-semibold transition ${
+                applicationSection === "all" ? "bg-primary/10 text-primary" : "text-foreground/75 hover:bg-muted"
+              }`}
+            >
+              All sections
+            </button>
+            {applicationSections.map((item) => (
+              <button
+                key={item.value}
+                type="button"
+                onClick={() => setApplicationSection(item.value)}
+                className={`flex w-full rounded-xl px-4 py-2 text-left text-sm font-semibold transition ${
+                  applicationSection === item.value ? "bg-primary/10 text-primary" : "text-foreground/75 hover:bg-muted"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
         </div>
       </aside>
 
@@ -221,13 +245,45 @@ const DocumentLibrary = ({ documents }: { documents: BaeDocumentItem[] }) => {
                   id="bae-search"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search documents, forms, notices, or references"
+                  placeholder="Search documents, forms, resources, or references"
                   className="pl-9"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 md:w-[340px] md:shrink-0">
+            <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4 md:w-[520px] md:shrink-0">
+              <div className="min-w-0">
+                <Label className="text-sm text-foreground/70">Category</Label>
+                <Select value={category} onValueChange={(value) => setCategory(value as CategoryFilter)}>
+                  <SelectTrigger className="mt-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Documents ({documents.length})</SelectItem>
+                    {documentCategories.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label} ({categoryCounts[item.value] || 0})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="min-w-0">
+                <Label className="text-sm text-foreground/70">Application Section</Label>
+                <Select value={applicationSection} onValueChange={(value) => setApplicationSection(value as "all" | BaeApplicationSection)}>
+                  <SelectTrigger className="mt-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All sections</SelectItem>
+                    {applicationSections.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="min-w-0">
                 <Label className="text-sm text-foreground/70">Year</Label>
                 <Select value={year} onValueChange={setYear}>

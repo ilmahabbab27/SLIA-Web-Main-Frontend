@@ -86,7 +86,7 @@ const About = () => (
   <PageLayout title="About Us" subtitle="Sri Lanka Institute of Architects" breadcrumb="About Us / About">
     <section className="bg-background py-12 md:py-16">
       <div className="container space-y-14">
-        <div className="grid overflow-hidden border border-border bg-card shadow-sm lg:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)] lg:grid-rows-[auto_auto]">
+        <div className="grid overflow-hidden border border-border bg-card shadow-sm">
           <div className="min-w-0 p-6 md:p-10">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.24em] text-primary">History</p>
@@ -109,12 +109,7 @@ const About = () => (
             </div>
           </div>
 
-          <div className="relative min-h-[360px] bg-muted lg:col-start-2 lg:row-start-1">
-            <img src="/images/hero-2.jpg" alt="Sri Lankan architecture" className="absolute inset-0 h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-black/30" />
-          </div>
-
-          <div className="grid gap-3 border-t border-border bg-background/40 p-4 sm:grid-cols-2 lg:col-span-2 lg:row-start-2 xl:grid-cols-4">
+          <div className="grid gap-3 border-t border-border bg-background/40 p-4 sm:grid-cols-2 xl:grid-cols-4">
             {facts.map((fact) => (
               <div key={fact.label} className="border border-border bg-card p-5">
                 <p className="text-xs uppercase tracking-widest text-foreground/50">{fact.label}</p>

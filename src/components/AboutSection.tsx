@@ -54,7 +54,7 @@ const AboutSection = () => {
 
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-10">
           {/* History Column - Spans 7 columns on large screens */}
-          <div className="lg:col-span-7 space-y-8">
+          <div className="hidden lg:col-span-7 space-y-8">
             <ScrollReveal delay={0.1}>
               <div className="bg-white/5 border border-white/10 rounded-2xl p-8 md:p-10 relative overflow-hidden group hover:border-primary/30 transition-all duration-500 h-full">
                 <div className="absolute -top-10 -right-10 p-6 opacity-5 group-hover:opacity-10 transition-opacity duration-500 transform group-hover:rotate-12 group-hover:scale-110">
@@ -85,7 +85,7 @@ const AboutSection = () => {
 
           {/* Additional Info Cards - Spans 5 columns */}
           <div className="lg:col-span-5 flex flex-col gap-6">
-            <ScrollReveal variant="fadeRight" delay={0.2} className="flex-1">
+            <ScrollReveal variant="fadeRight" delay={0.2} className="hidden flex-1">
               <div className="bg-white/5 border border-white/10 p-6 md:p-8 rounded-2xl hover:bg-white/10 hover:border-primary/50 transition-all duration-300 h-full flex flex-col justify-center relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                   <GraduationCap className="w-32 h-32 text-white" />
@@ -106,7 +106,7 @@ const AboutSection = () => {
               </div>
             </ScrollReveal>
 
-            <ScrollReveal variant="fadeRight" delay={0.3} className="flex-1">
+            <ScrollReveal variant="fadeRight" delay={0.3} className="hidden flex-1">
               <div className="bg-primary/12 border border-primary/30 p-6 md:p-8 rounded-2xl relative overflow-hidden h-full flex flex-col justify-center group">
                 <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
                   <Target className="w-32 h-32 text-primary" />
@@ -145,7 +145,7 @@ const AboutSection = () => {
         </div>
 
         {/* Stats Counter Section */}
-        <ScrollReveal delay={0.4}>
+        <ScrollReveal delay={0.4} className="hidden">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-16 md:mt-24">
             {[
               { target: 1956, label: "Established" },

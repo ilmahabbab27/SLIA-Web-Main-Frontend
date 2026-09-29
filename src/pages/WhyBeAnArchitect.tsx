@@ -116,7 +116,7 @@ const WhyBeAnArchitect = () => (
     <section className="py-16">
       <div className="container space-y-16">
         <ScrollReveal variant="fadeUp">
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] lg:items-center">
+          <div className="grid gap-10 lg:grid-cols-1 lg:items-center">
             <div>
               <p className="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-primary">
                 The Profession
@@ -137,14 +137,6 @@ const WhyBeAnArchitect = () => (
                   preparing documentation, supporting approvals, and helping guide the project through construction.
                 </p>
               </div>
-            </div>
-
-            <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
-              <img
-                src="/images/hero-2.jpg"
-                alt="Architectural interior and building design"
-                className="h-full min-h-[360px] w-full object-cover"
-              />
             </div>
           </div>
         </ScrollReveal>
@@ -193,7 +185,7 @@ const WhyBeAnArchitect = () => (
           </ScrollReveal>
         </div>
 
-        <ScrollReveal variant="fadeUp">
+        <ScrollReveal variant="fadeUp" className="hidden">
           <div>
             <div className="mb-8 max-w-3xl">
               <p className="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-primary">
@@ -224,7 +216,7 @@ const WhyBeAnArchitect = () => (
           </div>
         </ScrollReveal>
 
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <div className="hidden grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
           <ScrollReveal variant="fadeUp">
             <div className="h-full rounded-3xl border border-border bg-card p-8 shadow-sm">
               <div className="mb-6 flex items-center gap-3">
@@ -267,7 +259,7 @@ const WhyBeAnArchitect = () => (
           </ScrollReveal>
         </div>
 
-        <ScrollReveal variant="fadeUp">
+        <ScrollReveal variant="fadeUp" className="hidden">
           <div className="rounded-3xl border border-primary/20 bg-primary/5 p-8 md:p-10">
             <div className="mb-8 max-w-3xl">
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white">

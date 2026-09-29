@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FileText, GraduationCap, Loader2, PanelLeftClose, PanelLeftOpen, Pencil, Plus, RefreshCw, Search, Trash2, Upload, Users, X } from "lucide-react";
 import { toast } from "sonner";
-import { baeDocumentApi, baeMemberApi, baeSettingApi, type BaeDocumentCategory, type BaeDocumentItem, type BaeMemberItem, type BaeMemberType } from "@/lib/api";
+import { baeDocumentApi, baeMemberApi, baeSettingApi, type BaeApplicationSection, type BaeDocumentCategory, type BaeDocumentItem, type BaeMemberItem, type BaeMemberType } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,13 +14,21 @@ import SliaManager from "@/pages/admin/SliaManager";
 
 const documentCategories: Array<{ value: BaeDocumentCategory; label: string }> = [
   { value: "applications", label: "Applications" },
+  { value: "resources", label: "Resources" },
   { value: "notices", label: "Notices" },
   { value: "references", label: "References" },
+];
+
+const applicationSections: Array<{ value: BaeApplicationSection; label: string }> = [
+  { value: "education", label: "Education" },
+  { value: "professional_affairs", label: "Professional Affairs" },
+  { value: "other", label: "Other" },
 ];
 
 type DocumentForm = {
   id?: number;
   category: BaeDocumentCategory;
+  application_section: BaeApplicationSection | null;
   title: string;
   meta: string;
   file_name: string;
@@ -33,6 +41,7 @@ type DocumentForm = {
 
 const emptyForm = (): DocumentForm => ({
   category: "applications",
+  application_section: null,
   title: "",
   meta: "",
   file_name: "",
@@ -46,6 +55,7 @@ const emptyForm = (): DocumentForm => ({
 const normalizeDocument = (item: BaeDocumentItem): DocumentForm => ({
   id: item.id,
   category: item.category,
+  application_section: item.application_section || null,
   title: item.title || "",
   meta: item.meta || "",
   file_name: item.file_name || "",
@@ -58,6 +68,7 @@ const normalizeDocument = (item: BaeDocumentItem): DocumentForm => ({
 
 const buildPayload = (form: DocumentForm): Omit<BaeDocumentItem, "id" | "created_at" | "updated_at"> => ({
   category: form.category,
+  application_section: form.category === "applications" ? form.application_section : null,
   title: form.title.trim(),
   meta: form.meta.trim(),
   file_name: form.file_name.trim(),
@@ -1012,7 +1023,7 @@ const BaeManager = () => {
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-primary">Board of Architectural Education</p>
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            BAE <span className="text-primary">Manager</span>
+            <span className="text-primary">Resources</span>
           </h2>
           <p className="mt-2 max-w-2xl text-slate-400">
             Manage Board of Architectural Education documents, student members, and graduate members.
@@ -1028,8 +1039,6 @@ const BaeManager = () => {
       <Tabs defaultValue="documents" className="space-y-6">
         <TabsList className="h-auto flex-wrap justify-start gap-2 border border-white/5 bg-[#0a0a0a] p-2">
           <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="all-members">All Members</TabsTrigger>
-          <TabsTrigger value="intro">Introduction</TabsTrigger>
         </TabsList>
 
         <TabsContent value="documents" className="mt-0">
@@ -1043,7 +1052,7 @@ const BaeManager = () => {
               <form onSubmit={saveDocument} className="space-y-5">
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Document Category</Label>
-                  <Select value={form.category} onValueChange={(value: BaeDocumentCategory) => setForm((current) => ({ ...current, category: value }))}>
+                  <Select value={form.category} onValueChange={(value: BaeDocumentCategory) => setForm((current) => ({ ...current, category: value, application_section: value === "applications" ? current.application_section || "education" : null }))}>
                     <SelectTrigger className="h-12 rounded-xl border-white/10 bg-white/5 text-white">
                       <SelectValue />
                     </SelectTrigger>
@@ -1056,6 +1065,22 @@ const BaeManager = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {form.category === "applications" && (
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Application Section</Label>
+                    <Select value={form.application_section || "education"} onValueChange={(value: BaeApplicationSection) => setForm((current) => ({ ...current, application_section: value }))}>
+                      <SelectTrigger className="h-12 rounded-xl border-white/10 bg-white/5 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="border-white/10 bg-[#0a0a0a] text-white">
+                        {applicationSections.map((section) => (
+                          <SelectItem key={section.value} value={section.value}>{section.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Title *</Label>

@@ -95,7 +95,7 @@ const PublicationCard = ({ item }: { item: BapPublicationItem }) => {
   );
 };
 
-const PublicationLibrary = ({ publications }: { publications: BapPublicationItem[] }) => {
+export const PublicationLibrary = ({ publications }: { publications: BapPublicationItem[] }) => {
   const location = useLocation();
   const categoryParam = new URLSearchParams(location.search).get("category");
   const [category, setCategory] = useState<CategoryFilter>(isPublicationCategory(categoryParam) ? categoryParam : "all");

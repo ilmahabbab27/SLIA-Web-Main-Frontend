@@ -15,10 +15,8 @@ import {
   Mail,
   MessageSquareWarning,
   Users,
-  KeyRound,
   Award,
   BookOpen,
-  BriefcaseBusiness,
   GraduationCap
 } from "lucide-react";
 import { useState } from "react";
@@ -33,17 +31,14 @@ const navItems = [
   { label: "Council Manager", icon: Users, path: "/admin/council" },
   { label: "Board Members", icon: Users, path: "/admin/board-members" },
   { label: "Governance Boards", icon: ShieldCheck, path: "/admin/boards" },
-  { label: "BOM Manager", icon: BriefcaseBusiness, path: "/admin/bom" },
-  { label: "BAE Manager", icon: GraduationCap, path: "/admin/bae" },
-  { label: "BAP Manager", icon: BookOpen, path: "/admin/bap" },
-  { label: "PAB Manager", icon: ShieldCheck, path: "/admin/pab" },
+  { label: "Resources", icon: GraduationCap, path: "/admin/bae" },
+  { label: "Publications", icon: BookOpen, path: "/admin/bap" },
   { label: "SLIA Members", icon: Users, path: "/admin/slia" },
   { label: "Contact Manager", icon: Mail, path: "/admin/contact" },
   { label: "Complaints & Inquiries", icon: MessageSquareWarning, path: "/admin/complaints" },
   { label: "FAQ Manager", icon: HelpCircle, path: "/admin/faqs" },
   { label: "Ticker Manager", icon: Megaphone, path: "/admin/ticker" },
   { label: "Award Categories", icon: Award, path: "/admin/award-categories" },
-  { label: "Admin Accounts", icon: KeyRound, path: "/admin/users" },
 ];
 
 const AdminLayout = () => {

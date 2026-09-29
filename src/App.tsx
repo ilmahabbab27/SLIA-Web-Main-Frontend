@@ -26,6 +26,7 @@ import SliaAnnualSessions from "./pages/SliaAnnualSessions";
 import Courses from "./pages/Courses";
 import Examinations from "./pages/Examinations";
 import Publications from "./pages/Publications";
+import Documents from "./pages/Documents";
 import Specifications from "./pages/Specifications";
 import History from "./pages/History";
 import Council from "./pages/about/Council";
@@ -98,6 +99,9 @@ const AppRoutes = () => (
           <Route path="/examinations" element={<Examinations />} />
           <Route path="/bae-notices" element={<Navigate to="/bae?section=notices#bae-documents" replace />} />
           <Route path="/publications" element={<Publications />} />
+          <Route path="/documents" element={<Documents />} />
+          <Route path="/resources" element={<Documents />} />
+          <Route path="/resources" element={<Documents />} />
           <Route path="/specifications" element={<Specifications />} />
           <Route path="/downloads" element={<Navigate to="/bae#bae-documents" replace />} />
           <Route path="/history" element={<History />} />
@@ -146,13 +150,7 @@ const AppRoutes = () => (
 
           {/* Friendly aliases: Boards */}
           <Route path="/trustees" element={<BoardOfTrustees />} />
-          <Route path="/management" element={<BoardOfManagement />} />
-          <Route path="/bae" element={<BoardOfArchitecturalEducation />} />
-          <Route path="/bae/student-members" element={<BaeStudentMembers />} />
-          <Route path="/bae/graduate-members" element={<BaeGraduateMembers />} />
-          <Route path="/bae/associate-members" element={<BaeAssociateMembers />} />
-          <Route path="/pab" element={<ProfessionalAffairsBoard />} />
-          <Route path="/bap" element={<BoardOfArchitecturalPublicationsBoards />} />
+
           <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>

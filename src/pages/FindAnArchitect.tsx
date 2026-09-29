@@ -105,11 +105,25 @@ const FindAnArchitect = () => {
   const fetchArchitects = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/slia-members?per_page=1000`, {
-        headers: { Accept: "application/json" },
-      });
-      const data = await response.json();
-      const visibleArchitects = (data.data || [])
+      const fetchPage = async (page: number) => {
+        const response = await fetch(`${API_BASE}/slia-members?per_page=1000&page=${page}`, {
+          headers: { Accept: "application/json" },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Unable to load architects (HTTP ${response.status})`);
+        }
+
+        return response.json();
+      };
+
+      const firstPage = await fetchPage(1);
+      const lastPage = Math.max(1, Number(firstPage.last_page) || 1);
+      const remainingPages = await Promise.all(
+        Array.from({ length: lastPage - 1 }, (_, index) => fetchPage(index + 2)),
+      );
+      const allArchitects = [firstPage, ...remainingPages].flatMap((page) => page.data || []);
+      const visibleArchitects = allArchitects
         .map((a: Architect) => removeEmptyText(a))
         .filter((a: Architect) => allowedMembershipTypes.includes(a.membership_type || ""));
       setArchitects(visibleArchitects);
@@ -135,20 +149,10 @@ const FindAnArchitect = () => {
 
     if (query.trim()) {
       const q = query.trim().toLowerCase();
-      results = results.filter((a) =>
-        [
-          a.full_name,
-          a.arb_number,
-          a.location_district,
-          a.practice_type,
-          a.office_email,
-          a.office_phone,
-          a.practice_name,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase()
-          .includes(q),
+      results = results.filter((architect) =>
+        Object.values(architect).some((value) =>
+          value != null && String(value).toLowerCase().includes(q),
+        ),
       );
     }
 
@@ -370,7 +374,7 @@ const FindAnArchitect = () => {
 
               <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-2">
                 <div className="space-y-5">
-                  <section className="space-y-3">
+                  <section className="hidden">
                     <h4 className="text-sm font-semibold uppercase tracking-widest text-foreground/50">Core Details</h4>
                     <div className="grid gap-3 rounded-2xl border border-border bg-muted/20 p-4 text-sm">
                       <p><span className="font-medium text-foreground">Yearbook:</span> {selectedArchitect.yearbook_name || "-"}</p>

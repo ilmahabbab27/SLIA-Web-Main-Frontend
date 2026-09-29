@@ -194,14 +194,22 @@ const SliaManager = ({ hideExtendedSections = false }: SliaManagerProps) => {
   const fetchMembers = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/slia-members?per_page=1000`, {
-        headers: {
-          Accept: "application/json",
-        },
-      });
-      if (!response.ok) throw new Error(await readErrorMessage(response, "Failed to fetch members"));
-      const data = await response.json();
-      setMembers((data.data || []).map((member: SliaMember) => removeEmptyText(member)));
+      const fetchPage = async (page: number) => {
+        const response = await fetch(`${API_URL}/slia-members?per_page=1000&page=${page}`, {
+          headers: { Accept: "application/json" },
+        });
+        if (!response.ok) throw new Error(await readErrorMessage(response, "Failed to fetch members"));
+        return response.json();
+      };
+
+      const firstPage = await fetchPage(1);
+      const lastPage = Math.max(1, Number(firstPage.last_page) || 1);
+      const allMembers: SliaMember[] = [...(firstPage.data || [])];
+      for (let page = 2; page <= lastPage; page += 1) {
+        const data = await fetchPage(page);
+        allMembers.push(...(data.data || []));
+      }
+      setMembers(allMembers.map((member) => removeEmptyText(member)));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to fetch members";
       setError(message);
